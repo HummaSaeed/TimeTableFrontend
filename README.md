@@ -1,70 +1,351 @@
-# Getting Started with Create React App
+# 🏫 Timetable Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive, modern web application for managing school timetables with advanced features including import functionality, automated generation, and unified data management.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+### 🆕 **New Features (Latest Update)**
+- **📥 Timetable Import**: Import existing timetables from Excel/CSV files
+- **🔧 Unified Data Management**: Manage teachers, classes, and subjects in one interface
+- **📊 Enhanced Dashboard**: Comprehensive overview with quick actions and statistics
+- **🛡️ Error Boundary**: Graceful error handling and recovery
+- **🏥 System Health Check**: Monitor and test system functionality
+- **🎨 Modern UI**: Beautiful, responsive design with consistent styling
 
-### `npm start`
+### 🎯 **Core Functionality**
+- **👨‍🏫 Teacher Management**: Complete CRUD operations for faculty
+- **🏫 Class Management**: Handle classes, sections, and student counts
+- **📚 Subject Management**: Organize courses and curriculum
+- **📅 Timetable Generation**: AI-powered automatic timetable creation
+- **📋 Assignment Management**: Link teachers to subjects and classes
+- **⚙️ School Profile**: Comprehensive school information management
+- **🔐 Authentication**: Secure login with role-based access
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🚀 Quick Start
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- Django backend running on localhost:8000
 
-### `npm test`
+### Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd timetablewebapp
+   ```
 
-### `npm run build`
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. **Open your browser**
+   Navigate to `http://localhost:3000`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🏗️ Project Structure
 
-### `npm run eject`
+```
+timetablewebapp/
+├── src/
+│   ├── components/           # Reusable UI components
+│   │   ├── Auth/            # Authentication components
+│   │   ├── Layout/          # Layout and navigation
+│   │   └── ErrorBoundary.js # Error handling
+│   ├── contexts/            # React contexts
+│   │   └── AuthContext.js   # Authentication state
+│   ├── pages/               # Main application pages
+│   │   ├── Dashboard/       # Dashboard components
+│   │   ├── Teachers/        # Teacher management
+│   │   ├── Classes/         # Class management
+│   │   ├── Subjects/        # Subject management
+│   │   ├── Timetable/       # Timetable features
+│   │   ├── DataManagement/  # Unified data management
+│   │   └── Settings/        # System settings
+│   ├── services/            # API and external services
+│   │   └── api.js          # API endpoints and methods
+│   └── styles/              # CSS and styling
+├── public/                  # Static assets
+└── package.json            # Dependencies and scripts
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🔧 Configuration
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### API Configuration
+Update the API base URL in `src/services/api.js`:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```javascript
+const API_BASE_URL = 'http://localhost:8000'; // Your Django server URL
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Environment Variables
+Create a `.env` file in the root directory:
 
-## Learn More
+```env
+REACT_APP_API_URL=http://localhost:8000
+REACT_APP_ENVIRONMENT=development
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📱 Usage Guide
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 1. **Getting Started**
+- Navigate to `/login` to sign in
+- Use demo account: `demo@school.com` / `demo123`
+- Or register a new school account
+
+### 2. **Import Existing Timetable**
+1. Go to **Dashboard** → **Import Existing Timetable**
+2. Upload your Excel/CSV file
+3. Map columns to system fields
+4. Preview and validate data
+5. Click **Import Timetable**
+
+### 3. **Manage Data**
+1. Navigate to **Data Management**
+2. Use tabs to switch between Teachers, Classes, and Subjects
+3. Add, edit, or delete items as needed
+4. Use search and filters to find specific items
+
+### 4. **Generate New Timetable**
+1. Go to **Timetable** → **Generate Timetable**
+2. Configure generation parameters
+3. Click **Generate Timetable**
+4. Review and adjust as needed
+
+### 5. **System Health Check**
+1. Go to **Settings** → **System Health**
+2. Click **Run Health Check**
+3. Review test results and recommendations
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/login/` - School login
+- `POST /api/teacher/login/` - Teacher login
+- `POST /api/register/` - School registration
+- `POST /api/token/refresh/` - Token refresh
+
+### Data Management
+- `GET/POST /api/teachers/` - Teacher CRUD
+- `GET/POST /api/classes/` - Class CRUD
+- `GET/POST /api/subjects/` - Subject CRUD
+- `GET/POST /api/school-profile/` - School profile
+
+### Timetable
+- `GET/POST /api/timetable/slots/` - Timetable slots
+- `POST /api/timetable/generate/` - Generate timetable
+- `POST /api/timetable/import/` - Import timetable
+
+## 🎨 UI Components
+
+### Design System
+- **Bootstrap 5**: Modern, responsive framework
+- **Custom CSS**: Consistent styling and branding
+- **Font Awesome**: Professional icon set
+- **Responsive Design**: Mobile-first approach
+
+### Key Components
+- **Modal Forms**: Clean, focused input interfaces
+- **Data Tables**: Sortable, filterable data display
+- **Progress Indicators**: Loading states and progress bars
+- **Alert System**: Success, error, and info notifications
+
+## 🛡️ Error Handling
+
+### Error Boundary
+- Catches runtime errors gracefully
+- Provides user-friendly error messages
+- Offers recovery options (reload, go home)
+- Generates error reports for debugging
+
+### API Error Handling
+- Automatic token refresh on 401 errors
+- Graceful fallback for network issues
+- User-friendly error messages
+- Retry mechanisms for failed requests
+
+## 🔒 Security Features
+
+### Authentication
+- JWT token-based authentication
+- Automatic token refresh
+- Secure token storage
+- Role-based access control
+
+### Data Protection
+- Input validation and sanitization
+- CSRF protection
+- Secure API communication
+- Session management
+
+## 📊 Performance Optimization
 
 ### Code Splitting
+- Lazy loading of components
+- Route-based code splitting
+- Optimized bundle sizes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Caching
+- API response caching
+- Local storage for user preferences
+- Efficient state management
 
-### Analyzing the Bundle Size
+## 🧪 Testing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Manual Testing
+1. **Login Flow**: Test authentication with valid/invalid credentials
+2. **Data Management**: Test CRUD operations for all entities
+3. **Timetable Import**: Test file upload and data mapping
+4. **Error Handling**: Test error scenarios and recovery
+5. **Responsive Design**: Test on different screen sizes
 
-### Making a Progressive Web App
+### Automated Testing
+```bash
+# Run tests
+npm test
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+# Run tests with coverage
+npm test -- --coverage
 
-### Advanced Configuration
+# Run tests in watch mode
+npm test -- --watch
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🚀 Deployment
 
-### Deployment
+### Production Build
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Environment Setup
+1. Set `NODE_ENV=production`
+2. Configure production API URL
+3. Enable HTTPS
+4. Set up CDN for static assets
 
-### `npm run build` fails to minify
+### Deployment Options
+- **Netlify**: Static site hosting
+- **Vercel**: React-optimized hosting
+- **AWS S3**: Scalable static hosting
+- **Heroku**: Full-stack deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### 1. **Login Not Working**
+- Check if Django backend is running
+- Verify API URL configuration
+- Check browser console for errors
+- Clear browser cache and cookies
+
+#### 2. **Import Not Working**
+- Ensure file format is CSV or Excel
+- Check file size (max 10MB)
+- Verify column mapping
+- Check browser console for errors
+
+#### 3. **Data Not Loading**
+- Check API connectivity
+- Verify authentication tokens
+- Check network tab for failed requests
+- Run system health check
+
+### Debug Mode
+Enable debug mode in browser console:
+```javascript
+localStorage.setItem('debug', 'true');
+```
+
+## 📚 API Documentation
+
+### Request Format
+```javascript
+// Example API call
+const response = await teachersAPI.create({
+  name: 'John Doe',
+  email: 'john@school.com',
+  subject_specialists: ['Mathematics', 'Physics']
+});
+```
+
+### Response Format
+```javascript
+{
+  data: {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@school.com',
+    // ... other fields
+  },
+  status: 201
+}
+```
+
+## 🔄 Migration Guide
+
+### From Previous Version
+1. **Backup Data**: Export existing data
+2. **Update Dependencies**: Run `npm install`
+3. **Database Migration**: Follow Django migration steps
+4. **Test Functionality**: Verify all features work
+5. **Update Configuration**: Review new settings
+
+### Breaking Changes
+- None in this version
+- All existing functionality preserved
+- New features are additive
+
+## 🤝 Contributing
+
+### Development Setup
+1. Fork the repository
+2. Create feature branch
+3. Make changes
+4. Add tests
+5. Submit pull request
+
+### Code Standards
+- ESLint configuration
+- Prettier formatting
+- React best practices
+- Accessibility guidelines
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### Documentation
+- [User Guide](docs/USER_GUIDE.md)
+- [API Reference](docs/API_REFERENCE.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+
+### Getting Help
+- **Issues**: GitHub issue tracker
+- **Discussions**: GitHub discussions
+- **Email**: support@timetablesystem.com
+
+### Community
+- **Forum**: Community support forum
+- **Discord**: Real-time chat support
+- **YouTube**: Video tutorials
+
+## 🎉 Acknowledgments
+
+- **Bootstrap Team**: UI framework
+- **React Team**: Frontend library
+- **Font Awesome**: Icon library
+- **Open Source Community**: Libraries and tools
+
+---
+
+**Made with ❤️ for better education management**

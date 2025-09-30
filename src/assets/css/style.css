@@ -1,0 +1,93 @@
+/* Subject Cards Styling */
+.subject-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.subject-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.subject-card.bg-success {
+  border-color: #198754;
+}
+
+.subject-card.bg-white:hover {
+  border-color: #0d6efd;
+  background-color: #f8f9ff !important;
+}
+
+/* Hover effects for badges */
+.badge:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+/* Remove button hover effect */
+.badge .fa-times:hover {
+  color: #dc3545 !important;
+  transform: scale(1.2);
+  transition: all 0.2s ease;
+}
+
+/* Transition utilities */
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.hover\:shadow-sm:hover {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+/* Responsive adjustments for subject cards */
+@media (max-width: 768px) {
+  .subject-card {
+    min-height: 80px !important;
+  }
+  
+  .subject-card .fa-2x {
+    font-size: 1.5em !important;
+  }
+  
+  .subject-card h6 {
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Timetable Break Row Styling */
+.break-row {
+  background-color: #fff3cd !important;
+}
+
+.break-row td {
+  border: 2px solid #ffeaa7 !important;
+  background-color: #fff3cd !important;
+}
+
+.break-cell {
+  background-color: #fff3cd !important;
+  border: 2px solid #ffeaa7 !important;
+}
+
+.break-indicator {
+  font-size: 0.9rem;
+  color: #856404;
+  font-weight: 500;
+}
+
+.break-row .fw-bold {
+  color: #856404 !important;
+}
+
+/* Ensure break rows are visually distinct */
+.break-row:hover {
+  background-color: #ffeaa7 !important;
+}
+
+.break-row:hover td {
+  background-color: #ffeaa7 !important;
+}
+
+
