@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container, Row, Col, Card, Button, Alert, Spinner, 
+  Container, Row, Col, Card, Button, Alert, Spinner,
   Badge, ProgressBar, Tabs, Tab
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { 
-  teachersAPI, classesAPI, subjectsAPI, timetableAPI, 
-  schoolProfileAPI 
+import {
+  teachersAPI, classesAPI, subjectsAPI, timetableAPI,
+  schoolProfileAPI
 } from '../../services/api';
 
 const EnhancedDashboard = () => {
@@ -30,10 +30,10 @@ const EnhancedDashboard = () => {
     try {
       setLoading(true);
       const [
-        teachersRes, 
-        classesRes, 
-        subjectsRes, 
-        timetableRes, 
+        teachersRes,
+        classesRes,
+        subjectsRes,
+        timetableRes,
         profileRes
       ] = await Promise.all([
         teachersAPI.getAll(),
@@ -71,7 +71,7 @@ const EnhancedDashboard = () => {
       });
 
       setSchoolProfile(profileRes.data);
-      
+
       // Generate recent activity
       const activities = [];
       if (teachers.length > 0) {
@@ -187,33 +187,33 @@ const EnhancedDashboard = () => {
   }
 
   return (
-    <div style={{ 
-      padding: '24px', 
+    <div style={{
+      padding: '24px',
       background: '#FFFFFF',
       fontFamily: 'Poppins, sans-serif',
       minHeight: '100vh'
     }}>
-        {error && (
-          <Alert variant="danger" onClose={() => setError(null)} dismissible>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert variant="danger" onClose={() => setError(null)} dismissible>
+          {error}
+        </Alert>
+      )}
 
       {/* Header Section */}
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center flex-wrap">
           <div>
-            <h1 style={{ 
-              fontWeight: '700', 
-              color: '#333333', 
+            <h1 style={{
+              fontWeight: '700',
+              color: '#333333',
               margin: 0,
               fontFamily: 'Poppins, sans-serif',
               fontSize: '28px'
             }}>
               Dashboard
             </h1>
-            <p style={{ 
-              color: '#6C757D', 
+            <p style={{
+              color: '#6C757D',
               margin: '4px 0 0 0',
               fontSize: '14px',
               fontWeight: '400'
@@ -222,7 +222,7 @@ const EnhancedDashboard = () => {
             </p>
           </div>
           <div className="d-flex gap-2 mt-2 mt-md-0">
-            <Button 
+            <Button
               style={{
                 background: '#1A6E48',
                 border: 'none',
@@ -237,7 +237,7 @@ const EnhancedDashboard = () => {
               <i className="fas fa-plus me-2"></i>
               Add Class
             </Button>
-            <Button 
+            <Button
               variant="outline-secondary"
               style={{
                 borderRadius: '8px',
@@ -253,22 +253,6 @@ const EnhancedDashboard = () => {
               <i className="fas fa-upload me-2"></i>
               Import Data
             </Button>
-                      <Button 
-              variant="outline-secondary"
-              style={{
-                borderRadius: '8px',
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px',
-                borderColor: '#dee2e6',
-                color: '#6C757D'
-              }}
-              onClick={fetchDashboardData}
-            >
-              <i className="fas fa-refresh me-2"></i>
-              Refresh
-                      </Button>
           </div>
         </div>
       </div>
@@ -285,39 +269,39 @@ const EnhancedDashboard = () => {
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}
-          onClick={() => navigate('/teachers')}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}
+            onClick={() => navigate('/teachers')}>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
                 <div>
-                  <p style={{ 
-                    color: '#6C757D', 
-                    fontSize: '14px', 
+                  <p style={{
+                    color: '#6C757D',
+                    fontSize: '14px',
                     fontWeight: '500',
                     margin: '0 0 8px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     Total Teachers
                   </p>
-                  <h2 style={{ 
-                    color: '#333333', 
-                    fontSize: '32px', 
+                  <h2 style={{
+                    color: '#333333',
+                    fontSize: '32px',
                     fontWeight: '700',
                     margin: '0 0 4px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.teachers.total}
                   </h2>
-                  <p style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '12px', 
+                  <p style={{
+                    color: '#1A6E48',
+                    fontSize: '12px',
                     fontWeight: '500',
                     margin: 0,
                     fontFamily: 'Poppins, sans-serif'
@@ -333,15 +317,15 @@ const EnhancedDashboard = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fas fa-chalkboard-teacher" style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '24px' 
+                  <i className="fas fa-chalkboard-teacher" style={{
+                    color: '#1A6E48',
+                    fontSize: '24px'
                   }}></i>
                 </div>
               </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
+            </Card.Body>
+          </Card>
+        </Col>
 
         <Col lg={3} md={6} className="mb-3">
           <Card style={{
@@ -353,46 +337,46 @@ const EnhancedDashboard = () => {
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}
-          onClick={() => navigate('/classes')}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}
+            onClick={() => navigate('/classes')}>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
                 <div>
-                  <p style={{ 
-                    color: '#6C757D', 
-                    fontSize: '14px', 
+                  <p style={{
+                    color: '#6C757D',
+                    fontSize: '14px',
                     fontWeight: '500',
                     margin: '0 0 8px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     Total Classes
                   </p>
-                  <h2 style={{ 
-                    color: '#333333', 
-                    fontSize: '32px', 
+                  <h2 style={{
+                    color: '#333333',
+                    fontSize: '32px',
                     fontWeight: '700',
                     margin: '0 0 4px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.classes.total}
                   </h2>
-                  <p style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '12px', 
+                  <p style={{
+                    color: '#1A6E48',
+                    fontSize: '12px',
                     fontWeight: '500',
                     margin: 0,
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.classes.active} active
                   </p>
-                        </div>
+                </div>
                 <div style={{
                   background: '#D8F3DC',
                   borderRadius: '8px',
@@ -401,15 +385,15 @@ const EnhancedDashboard = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fas fa-users" style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '24px' 
+                  <i className="fas fa-users" style={{
+                    color: '#1A6E48',
+                    fontSize: '24px'
                   }}></i>
-                        </div>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
 
         <Col lg={3} md={6} className="mb-3">
           <Card style={{
@@ -421,46 +405,46 @@ const EnhancedDashboard = () => {
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}
-          onClick={() => navigate('/subjects')}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}
+            onClick={() => navigate('/subjects')}>
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
-                            <div>
-                  <p style={{ 
-                    color: '#6C757D', 
-                    fontSize: '14px', 
+                <div>
+                  <p style={{
+                    color: '#6C757D',
+                    fontSize: '14px',
                     fontWeight: '500',
                     margin: '0 0 8px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     Total Subjects
                   </p>
-                  <h2 style={{ 
-                    color: '#333333', 
-                    fontSize: '32px', 
+                  <h2 style={{
+                    color: '#333333',
+                    fontSize: '32px',
                     fontWeight: '700',
                     margin: '0 0 4px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.subjects.total}
                   </h2>
-                  <p style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '12px', 
+                  <p style={{
+                    color: '#1A6E48',
+                    fontSize: '12px',
                     fontWeight: '500',
                     margin: 0,
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.subjects.active} active
                   </p>
-                                  </div>
+                </div>
                 <div style={{
                   background: '#D8F3DC',
                   borderRadius: '8px',
@@ -469,15 +453,15 @@ const EnhancedDashboard = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fas fa-book" style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '24px' 
+                  <i className="fas fa-book" style={{
+                    color: '#1A6E48',
+                    fontSize: '24px'
                   }}></i>
-                                  </div>
-                                </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
 
         <Col lg={3} md={6} className="mb-3">
           <Card style={{
@@ -489,39 +473,39 @@ const EnhancedDashboard = () => {
             transition: 'all 0.3s ease',
             cursor: 'pointer'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}
-          onClick={() => navigate('/timetable')}>
-                            <Card.Body>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}
+            onClick={() => navigate('/timetable')}>
+            <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
                 <div>
-                  <p style={{ 
-                    color: '#6C757D', 
-                    fontSize: '14px', 
+                  <p style={{
+                    color: '#6C757D',
+                    fontSize: '14px',
                     fontWeight: '500',
                     margin: '0 0 8px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     Timetable Slots
                   </p>
-                  <h2 style={{ 
-                    color: '#333333', 
-                    fontSize: '32px', 
+                  <h2 style={{
+                    color: '#333333',
+                    fontSize: '32px',
                     fontWeight: '700',
                     margin: '0 0 4px 0',
                     fontFamily: 'Poppins, sans-serif'
                   }}>
                     {stats.timetable.total}
                   </h2>
-                  <p style={{ 
-                    color: stats.timetable.conflicts > 0 ? '#E63946' : '#1A6E48', 
-                    fontSize: '12px', 
+                  <p style={{
+                    color: stats.timetable.conflicts > 0 ? '#E63946' : '#1A6E48',
+                    fontSize: '12px',
                     fontWeight: '500',
                     margin: 0,
                     fontFamily: 'Poppins, sans-serif'
@@ -537,16 +521,16 @@ const EnhancedDashboard = () => {
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <i className="fas fa-calendar-alt" style={{ 
-                    color: '#1A6E48', 
-                    fontSize: '24px' 
+                  <i className="fas fa-calendar-alt" style={{
+                    color: '#1A6E48',
+                    fontSize: '24px'
                   }}></i>
                 </div>
               </div>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       {/* Widget Cards */}
       <Row className="mb-4">
@@ -560,14 +544,14 @@ const EnhancedDashboard = () => {
             height: '300px',
             transition: 'all 0.3s ease'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.06)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}>
             <Card.Body className="p-3">
               <h5 style={{
                 color: '#333333',
@@ -578,9 +562,9 @@ const EnhancedDashboard = () => {
               }}>
                 Quick Actions
               </h5>
-                      <Row>
+              <Row>
                 <Col sm={6} className="mb-3">
-                  <div 
+                  <div
                     onClick={() => navigate('/timetable/generate')}
                     style={{
                       background: '#D8F3DC',
@@ -606,10 +590,10 @@ const EnhancedDashboard = () => {
                     <p style={{ color: '#6C757D', fontSize: '12px', margin: 0, fontFamily: 'Poppins, sans-serif' }}>
                       Auto-create schedules
                     </p>
-                              </div>
+                  </div>
                 </Col>
                 <Col sm={6} className="mb-3">
-                  <div 
+                  <div
                     onClick={() => navigate('/teachers')}
                     style={{
                       background: '#D8F3DC',
@@ -630,15 +614,15 @@ const EnhancedDashboard = () => {
                   >
                     <i className="fas fa-chalkboard-teacher" style={{ color: '#1A6E48', fontSize: '20px', marginBottom: '8px' }}></i>
                     <h6 style={{ color: '#333333', fontWeight: '600', margin: '8px 0 4px 0', fontFamily: 'Poppins, sans-serif' }}>
-                                Manage Teachers
+                      Manage Teachers
                     </h6>
                     <p style={{ color: '#6C757D', fontSize: '12px', margin: 0, fontFamily: 'Poppins, sans-serif' }}>
                       Add and manage teaching staff
                     </p>
                   </div>
-                        </Col>
+                </Col>
                 <Col sm={6} className="mb-3">
-                  <div 
+                  <div
                     onClick={() => navigate('/timetable/import')}
                     style={{
                       background: '#D8F3DC',
@@ -664,10 +648,10 @@ const EnhancedDashboard = () => {
                     <p style={{ color: '#6C757D', fontSize: '12px', margin: 0, fontFamily: 'Poppins, sans-serif' }}>
                       Upload existing schedules
                     </p>
-                              </div>
+                  </div>
                 </Col>
                 <Col sm={6} className="mb-3">
-                  <div 
+                  <div
                     onClick={() => navigate('/settings')}
                     style={{
                       background: '#D8F3DC',
@@ -696,9 +680,9 @@ const EnhancedDashboard = () => {
                   </div>
                 </Col>
               </Row>
-                            </Card.Body>
-                          </Card>
-                        </Col>
+            </Card.Body>
+          </Card>
+        </Col>
 
         {/* Recent Activity Widget */}
         <Col lg={6} className="mb-3">
@@ -710,16 +694,16 @@ const EnhancedDashboard = () => {
             height: '300px',
             transition: 'all 0.3s ease'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.06)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
-          }}>
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.06)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)';
+            }}>
             <Card.Body className="p-3">
-                              <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 style={{
                   color: '#333333',
                   fontWeight: '600',
@@ -759,23 +743,23 @@ const EnhancedDashboard = () => {
                         <i className={activity.icon} style={{ color: '#1A6E48', fontSize: '14px' }}></i>
                       </div>
                       <div className="flex-grow-1">
-                        <p style={{ 
-                          color: '#333333', 
-                          fontSize: '14px', 
+                        <p style={{
+                          color: '#333333',
+                          fontSize: '14px',
                           fontWeight: '500',
                           margin: '0 0 2px 0',
                           fontFamily: 'Poppins, sans-serif'
                         }}>
                           {activity.message}
                         </p>
-                        <small style={{ 
-                          color: '#6C757D', 
+                        <small style={{
+                          color: '#6C757D',
                           fontSize: '12px',
                           fontFamily: 'Poppins, sans-serif'
                         }}>
                           {new Date(activity.timestamp).toLocaleDateString()}
                         </small>
-                              </div>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -787,10 +771,10 @@ const EnhancedDashboard = () => {
                   </div>
                 )}
               </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
     </div>
   );

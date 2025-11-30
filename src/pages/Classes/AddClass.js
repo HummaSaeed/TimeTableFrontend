@@ -269,31 +269,12 @@ const AddClass = () => {
             }}>
               Add New Class
             </h1>
-            <p style={{
-              color: '#6C757D',
-              margin: '4px 0 0 0',
-              fontSize: '14px',
-              fontWeight: '400'
-            }}>
-              Create a new class with sections and assign subjects
-            </p>
+            {/* Tagline removed for a cleaner header */}
           </div>
           <div className="d-flex gap-2 mt-2 mt-md-0">
-            <Button
-              style={{
-                background: 'transparent',
-                border: '1px solid #dee2e6',
-                borderRadius: '8px',
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px',
-                color: '#6C757D'
-              }}
-              onClick={() => navigate('/classes')}
-            >
+            <Button style={{ background: 'transparent', border: '1px solid #dee2e6', borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', padding: '10px 20px', fontSize: '14px', color: '#6C757D' }} onClick={() => navigate('/classes')}>
               <i className="fas fa-arrow-left me-2"></i>
-              Back to Classes
+              <span className="back-btn-text">Back to Classes</span>
             </Button>
           </div>
         </div>
@@ -362,6 +343,8 @@ const AddClass = () => {
                           }}
                         >
                           <option value="">Select Class</option>
+                          <option value="Nursery">Nursery</option>
+                          <option value="KG">KG</option>
                           <option value="1">Class 1</option>
                           <option value="2">Class 2</option>
                           <option value="3">Class 3</option>
@@ -894,31 +877,7 @@ const AddClass = () => {
                         Reset
                       </Button>
                       
-                      <Button 
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid #17a2b8',
-                          borderRadius: '8px',
-                          fontFamily: 'Poppins, sans-serif',
-                          fontWeight: '500',
-                          padding: '10px 20px',
-                          fontSize: '14px',
-                          color: '#17a2b8'
-                        }}
-                        onClick={() => {
-                          console.log('Current form data:', formData);
-                          console.log('Selected subjects:', formData.selected_subjects);
-                          console.log('Available subjects:', availableSubjects);
-                          console.log('Payload that will be sent:', {
-                            ...formData,
-                            subjects_input: formData.selected_subjects
-                          });
-                        }}
-                        disabled={loading}
-                      >
-                        <i className="fas fa-bug me-2"></i>
-                        Debug
-                      </Button>
+                      {/* Debug button removed from production UI */}
                       
                       <Button 
                         style={{

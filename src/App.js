@@ -18,10 +18,13 @@ import SubjectsList from './pages/Subjects/SubjectsList';
 import AddSubject from './pages/Subjects/AddSubject';
 import ClassesList from './pages/Classes/ClassesList';
 import AddClass from './pages/Classes/AddClass';
+import EditClass from './pages/Classes/EditClass';
 import TimetableList from './pages/Timetable/TimetableList';
 import GenerateTimetable from './pages/Timetable/GenerateTimetable';
 import TimetableImport from './pages/Timetable/TimetableImport';
 import SubstitutionTracking from './pages/Timetable/SubstitutionTracking';
+import TodaysSubstitutionGrid from './pages/Timetable/TodaysSubstitutionGrid';
+import TodaysSchedule from './pages/Timetable/TodaysSchedule';
 import AssignmentsList from './pages/Assignments/AssignmentsList';
 import ClassTimetable from './pages/Classes/ClassTimetable';
 import TeacherTimetable from './pages/Teachers/TeacherTimetable';
@@ -34,7 +37,7 @@ import SchoolProfile from './pages/School/SchoolProfile';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -47,7 +50,7 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -76,7 +79,7 @@ const App = () => {
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/register" element={<RegisterScreen />} />
               <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-              
+
               {/* Protected Routes */}
               <Route path="/dashboard" element={
                 <ProtectedRoute>
@@ -85,8 +88,8 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
-              
+
+
               {/* Teachers Routes */}
               <Route path="/teachers" element={
                 <ProtectedRoute>
@@ -116,7 +119,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* Subjects Routes */}
               <Route path="/subjects" element={
                 <ProtectedRoute>
@@ -132,7 +135,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* Classes Routes */}
               <Route path="/classes" element={
                 <ProtectedRoute>
@@ -148,6 +151,13 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
+              <Route path="/classes/edit/:classId" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <EditClass />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
               <Route path="/classes/:classId/timetable" element={
                 <ProtectedRoute>
                   <MainLayout>
@@ -155,7 +165,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* Timetable Routes */}
               <Route path="/timetable" element={
                 <ProtectedRoute>
@@ -181,11 +191,25 @@ const App = () => {
               <Route path="/timetable/substitution" element={
                 <ProtectedRoute>
                   <MainLayout>
+                    <TodaysSubstitutionGrid />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/timetable/substitution-tracking" element={
+                <ProtectedRoute>
+                  <MainLayout>
                     <SubstitutionTracking />
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+              <Route path="/timetable/today-schedule" element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <TodaysSchedule />
+                  </MainLayout>
+                </ProtectedRoute>
+              } />
+
               {/* Assignments Routes */}
               <Route path="/assignments" element={
                 <ProtectedRoute>
@@ -194,7 +218,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* School Management Routes */}
               <Route path="/school/profile" element={
                 <ProtectedRoute>
@@ -210,7 +234,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* Settings Routes */}
               <Route path="/settings" element={
                 <ProtectedRoute>
@@ -219,7 +243,7 @@ const App = () => {
                   </MainLayout>
                 </ProtectedRoute>
               } />
-              
+
               {/* Default Route */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

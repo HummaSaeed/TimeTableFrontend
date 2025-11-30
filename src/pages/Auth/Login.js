@@ -57,35 +57,22 @@ const Login = () => {
 
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-
     if (isSubmitting) return;
 
-    
-    
     setIsSubmitting(true);
+    // Do not clear error here immediately if it causes flickering, but usually it's fine.
+    // clearError(); 
 
-    clearError();
-
-    
-    
     try {
-
       await login(formData, userType);
-
       navigate('/dashboard');
-
     } catch (error) {
-
       console.error('Login error:', error);
-
+      // Error is already set in context by login function
     } finally {
-
       setIsSubmitting(false);
-
     }
-
   };
 
 
@@ -94,14 +81,14 @@ const Login = () => {
 
     if (isSubmitting) return;
 
-    
-    
+
+
     setIsSubmitting(true);
 
     clearError();
 
-    
-    
+
+
     try {
 
       const demoCredentials = {
@@ -112,8 +99,8 @@ const Login = () => {
 
       };
 
-      
-      
+
+
       await login(demoCredentials, 'school');
 
       navigate('/dashboard');
@@ -160,20 +147,20 @@ const Login = () => {
 
   return (
 
-    <div className="min-vh-100 d-flex align-items-center" 
+    <div className="min-vh-100 d-flex align-items-center"
 
-         style={{ 
+      style={{
 
-           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 
-           position: 'relative',
+        position: 'relative',
 
-           overflow: 'hidden'
+        overflow: 'hidden'
 
-         }}>
-      
-      
-      
+      }}>
+
+
+
       {/* Background Pattern */}
 
       <div className="position-absolute w-100 h-100" style={{ opacity: 0.1 }}>
@@ -216,15 +203,15 @@ const Login = () => {
 
                   <Col lg={6} className="d-none d-lg-block">
 
-                    <div className="h-100 p-5 text-white" 
+                    <div className="h-100 p-5 text-white"
 
-                         style={{ 
+                      style={{
 
-                           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 
-                           borderRadius: '20px 0 0 20px'
+                        borderRadius: '20px 0 0 20px'
 
-                         }}>
+                      }}>
 
                       <div className="text-center">
 
@@ -242,8 +229,8 @@ const Login = () => {
 
                         </p>
 
-                        
-                        
+
+
                         <div className="text-start">
 
                           <div className="d-flex align-items-center mb-3">
@@ -415,21 +402,19 @@ const Login = () => {
                                 />
 
                                 <Button
-
                                   type="button"
-
                                   variant="link"
-
-                                  className="position-absolute end-0 top-0 h-100 text-decoration-none"
-
+                                  className="position-absolute end-0 text-decoration-none"
+                                  style={{
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    zIndex: 10,
+                                    color: '#6c757d'
+                                  }}
                                   onClick={() => setShowPassword(!showPassword)}
-
                                   disabled={isSubmitting}
-
                                 >
-
                                   <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-
                                 </Button>
 
                               </div>
@@ -579,21 +564,19 @@ const Login = () => {
                                 />
 
                                 <Button
-
                                   type="button"
-
                                   variant="link"
-
-                                  className="position-absolute end-0 top-0 h-100 text-decoration-none"
-
+                                  className="position-absolute end-0 text-decoration-none"
+                                  style={{
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    zIndex: 10,
+                                    color: '#6c757d'
+                                  }}
                                   onClick={() => setShowPassword(!showPassword)}
-
                                   disabled={isSubmitting}
-
                                 >
-
                                   <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-
                                 </Button>
 
                               </div>
@@ -805,724 +788,3 @@ const Login = () => {
 
 
 export default Login;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                <Button
-
-                                  type="button"
-
-                                  variant="link"
-
-                                  className="position-absolute end-0 top-0 h-100 text-decoration-none"
-
-                                  onClick={() => setShowPassword(!showPassword)}
-
-                                  disabled={isSubmitting}
-
-                                >
-
-                                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-
-                                </Button>
-
-                              </div>
-
-                            </Form.Group>
-
-
-
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-
-                              <Form.Check
-
-                                type="checkbox"
-
-                                id="remember"
-
-                                label="Remember me"
-
-                                disabled={isSubmitting}
-
-                              />
-
-                              <Link to="/forgot-password" className="text-decoration-none text-primary">
-
-                                Forgot Password?
-
-                              </Link>
-
-                            </div>
-
-
-
-                            <Button
-
-                              type="submit"
-
-                              variant="primary"
-
-                              size="lg"
-
-                              className="w-100 mb-3"
-
-                              disabled={isSubmitting || loading}
-
-                            >
-
-                              {isSubmitting ? (
-
-                                <>
-
-                                  <Spinner
-
-                                    as="span"
-
-                                    animation="border"
-
-                                    size="sm"
-
-                                    role="status"
-
-                                    aria-hidden="true"
-
-                                    className="me-2"
-
-                                  />
-
-                                  Signing In...
-
-                                </>
-
-                              ) : (
-
-                                'Sign In as School Admin'
-
-                              )}
-
-                            </Button>
-
-                          </Form>
-
-                        </Tab>
-
-
-
-                        <Tab eventKey="teacher" title={
-
-                          <span>
-
-                            <i className="fas fa-chalkboard-teacher me-2"></i>
-
-                            Teacher
-
-                          </span>
-
-                        }>
-
-                          <Form onSubmit={handleSubmit}>
-
-                            <Form.Group className="mb-3">
-
-                              <Form.Label>Email Address</Form.Label>
-
-                              <Form.Control
-
-                                type="email"
-
-                                placeholder="Enter your email"
-
-                                value={formData.email}
-
-                                onChange={(e) => handleInputChange('email', e.target.value)}
-
-                                required
-
-                                disabled={isSubmitting}
-
-                                className="form-control-lg"
-
-                              />
-
-                            </Form.Group>
-
-
-
-                            <Form.Group className="mb-3">
-
-                              <Form.Label>Password</Form.Label>
-
-                              <div className="position-relative">
-
-                                <Form.Control
-
-                                  type={showPassword ? "text" : "password"}
-
-                                  placeholder="Enter your password"
-
-                                  value={formData.password}
-
-                                  onChange={(e) => handleInputChange('password', e.target.value)}
-
-                                  required
-
-                                  disabled={isSubmitting}
-
-                                  className="form-control-lg"
-
-                                />
-
-                                <Button
-
-                                  type="button"
-
-                                  variant="link"
-
-                                  className="position-absolute end-0 top-0 h-100 text-decoration-none"
-
-                                  onClick={() => setShowPassword(!showPassword)}
-
-                                  disabled={isSubmitting}
-
-                                >
-
-                                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-
-                                </Button>
-
-                              </div>
-
-                            </Form.Group>
-
-
-
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-
-                              <Form.Check
-
-                                type="checkbox"
-
-                                id="remember-teacher"
-
-                                label="Remember me"
-
-                                disabled={isSubmitting}
-
-                              />
-
-                              <Link to="/forgot-password" className="text-decoration-none text-primary">
-
-                                Forgot Password?
-
-                              </Link>
-
-                            </div>
-
-
-
-                            <Button
-
-                              type="submit"
-
-                              variant="success"
-
-                              size="lg"
-
-                              className="w-100 mb-3"
-
-                              disabled={isSubmitting || loading}
-
-                            >
-
-                              {isSubmitting ? (
-
-                                <>
-
-                                  <Spinner
-
-                                    as="span"
-
-                                    animation="border"
-
-                                    size="sm"
-
-                                    role="status"
-
-                                    aria-hidden="true"
-
-                                    className="me-2"
-
-                                  />
-
-                                  Signing In...
-
-                                </>
-
-                              ) : (
-
-                                'Sign In as Teacher'
-
-                              )}
-
-                            </Button>
-
-                          </Form>
-
-                        </Tab>
-
-                      </Tabs>
-
-
-
-                      {/* Demo Login Button */}
-
-                      <Button
-
-                        type="button"
-
-                        variant="outline-secondary"
-
-                        size="lg"
-
-                        className="w-100 mb-3"
-
-                        onClick={handleDemoLogin}
-
-                        disabled={isSubmitting || loading}
-
-                      >
-
-                        {isSubmitting ? (
-
-                          <>
-
-                            <Spinner
-
-                              as="span"
-
-                              animation="border"
-
-                              size="sm"
-
-                              role="status"
-
-                              aria-hidden="true"
-
-                              className="me-2"
-
-                            />
-
-                            Loading Demo...
-
-                          </>
-
-                        ) : (
-
-                          <>
-
-                            <i className="fas fa-play me-2"></i>
-
-                            Try Demo Account
-
-                          </>
-
-                        )}
-
-                      </Button>
-
-
-
-                      {/* API Test Button */}
-
-                      <Button
-
-                        type="button"
-
-                        variant="outline-info"
-
-                        size="sm"
-
-                        className="w-100 mb-3"
-
-                        onClick={handleTestConnection}
-
-                        disabled={isSubmitting || loading}
-
-                      >
-
-                        <i className="fas fa-wifi me-2"></i>
-
-                        Test API Connection
-
-                      </Button>
-
-
-
-                      <div className="text-center">
-
-                        <p className="text-muted mb-0">
-
-                          Don't have an account?{' '}
-
-                          <Link to="/register" className="text-decoration-none text-primary fw-bold">
-
-                            Sign Up
-
-                          </Link>
-
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </Col>
-
-                </Row>
-
-              </Card.Body>
-
-            </Card>
-
-          </Col>
-
-        </Row>
-
-      </Container>
-
-    </div>
-
-  );
-
-};
-
-
-
-export default Login;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-
-                              <Form.Check
-
-                                type="checkbox"
-
-
-                                id="remember-teacher"
-
-
-                                label="Remember me"
-
-
-                                disabled={isSubmitting}
-
-
-                              />
-
-
-                              <Link to="/forgot-password" className="text-decoration-none text-primary">
-
-
-                                Forgot Password?
-
-
-                              </Link>
-
-
-                            </div>
-
-
-
-
-                            <Button
-
-
-                              type="submit"
-
-
-                              variant="success"
-
-
-                              size="lg"
-
-
-                              className="w-100 mb-3"
-
-
-                              disabled={isSubmitting || loading}
-
-
-                            >
-
-
-                              {isSubmitting ? (
-
-
-                                <>
-
-
-                                  <Spinner
-
-
-                                    as="span"
-
-
-                                    animation="border"
-
-
-                                    size="sm"
-
-
-                                    role="status"
-
-
-                                    aria-hidden="true"
-
-
-                                    className="me-2"
-
-
-                                  />
-
-                                  Signing In...
-
-                                </>
-
-
-                              ) : (
-
-
-                                'Sign In as Teacher'
-
-
-                              )}
-
-
-                            </Button>
-
-
-                          </Form>
-
-
-                        </Tab>
-
-
-                      </Tabs>
-
-
-
-
-                      {/* Demo Login Button */}
-
-
-                      <Button
-
-
-                        type="button"
-
-
-                        variant="outline-secondary"
-
-
-                        size="lg"
-
-
-                        className="w-100 mb-3"
-
-
-                        onClick={handleDemoLogin}
-
-
-                        disabled={isSubmitting || loading}
-
-
-                      >
-
-
-                        {isSubmitting ? (
-
-
-                          <>
-
-
-                            <Spinner
-
-
-                              as="span"
-
-
-                              animation="border"
-
-
-                              size="sm"
-
-
-                              role="status"
-
-
-                              aria-hidden="true"
-
-
-                              className="me-2"
-
-
-                            />
-
-
-                            Loading Demo...
-
-                          </>
-
-                        ) : (
-
-
-                          <>
-
-
-                            <i className="fas fa-play me-2"></i>
-
-
-                            Try Demo Account
-
-
-                          </>
-
-
-                        )}
-
-
-                      </Button>
-
-
-
-
-                      {/* API Test Button */}
-
-
-                      <Button
-
-
-                        type="button"
-
-
-                        variant="outline-info"
-
-
-                        size="sm"
-
-                        className="w-100 mb-3"
-
-                        onClick={handleTestConnection}
-
-
-                        disabled={isSubmitting || loading}
-
-
-                      >
-
-
-                        <i className="fas fa-wifi me-2"></i>
-
-
-                        Test API Connection
-
-
-                      </Button>
-
-
-
-
-                      <div className="text-center">
-
-
-                        <p className="text-muted mb-0">
-
-
-                          Don't have an account?{' '}
-
-
-                          <Link to="/register" className="text-decoration-none text-primary fw-bold">
-
-
-                            Sign Up
-
-
-                          </Link>
-
-
-                        </p>
-
-
-                      </div>
-
-
-                    </div>
-
-
-                  </Col>
-
-
-                </Row>
-
-
-              </Card.Body>
-
-
-            </Card>
-
-          </Col>
-
-        </Row>
-
-
-      </Container>
-
-    </div>
-
-  );
-
-};
-
-
-
-export default Login;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

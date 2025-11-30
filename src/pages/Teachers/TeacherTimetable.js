@@ -18,27 +18,39 @@ const TeacherTimetable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('timetable');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
   useEffect(() => {
     loadTeacherData();
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, [teacherId]);
 
   const loadTeacherData = async () => {
     try {
       setLoading(true);
-      
+
       // Load teacher details
       const teacherResponse = await teachersAPI.getTeacher(teacherId);
       setTeacher(teacherResponse.data);
-      
+
       // Load school profile for break periods
       const profileResponse = await schoolProfileAPI.getProfile();
       setSchoolProfile(profileResponse.data);
-      
+
       // Load teacher's timetable
       const timetableResponse = await timetableAPI.getByTeacher(teacherId);
-      setTimetableSlots(timetableResponse.data.results || []);
-      
+      const rawSlots = timetableResponse.data.results || [];
+
+      // Inject teacher name into slots for WorkloadManager
+      const slotsWithTeacher = rawSlots.map(slot => ({
+        ...slot,
+        teacher_name: teacherResponse.data.name // Ensure teacher name matches for filtering
+      }));
+
+      setTimetableSlots(slotsWithTeacher);
+
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load teacher data');
     } finally {
@@ -47,20 +59,19 @@ const TeacherTimetable = () => {
   };
 
   const getSlotForTimeAndDay = (timeSlot, day) => {
-    return timetableSlots.find(slot => 
+    return timetableSlots.find(slot =>
       slot.time_slot === timeSlot && slot.day === day
     );
   };
 
   const handleExportPDF = async () => {
     try {
-      const data = {
-        teacher: teacher,
-        timetable: timetableSlots,
-        schoolProfile: schoolProfile
-      };
-      await pdfService.exportTeacherTimetable(data);
+      const result = await pdfService.generateTeacherTimetablePDF(teacher, timetableSlots, schoolProfile);
+      if (result.success) {
+        pdfService.downloadPDF(result.data, result.filename);
+      }
     } catch (err) {
+      console.error('Export error:', err);
       setError('Failed to export PDF');
     }
   };
@@ -101,7 +112,7 @@ const TeacherTimetable = () => {
             Error Loading Timetable
           </Alert.Heading>
           <p style={{ fontFamily: 'Poppins, sans-serif' }}>{error}</p>
-          <Button 
+          <Button
             onClick={loadTeacherData}
             style={{
               background: '#D32F2F',
@@ -139,7 +150,7 @@ const TeacherTimetable = () => {
           <p style={{ fontFamily: 'Poppins, sans-serif' }}>
             The requested teacher could not be found.
           </p>
-          <Button 
+          <Button
             onClick={() => navigate('/teachers')}
             style={{
               background: '#F57C00',
@@ -150,7 +161,7 @@ const TeacherTimetable = () => {
             }}
           >
             <i className="fas fa-arrow-left me-2"></i>
-            Back to Teachers
+            <span className="back-btn-text">Back to Teachers</span>
           </Button>
         </Alert>
       </div>
@@ -169,28 +180,20 @@ const TeacherTimetable = () => {
     }}>
       {/* Header Section */}
       <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center flex-wrap">
-          <div>
+        <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div style={{ flex: 1, minWidth: '200px' }}>
             <h1 style={{
               fontWeight: '700',
               color: '#333333',
               margin: 0,
               fontFamily: 'Poppins, sans-serif',
-              fontSize: '28px'
+              fontSize: isMobile ? '22px' : '28px'
             }}>
-              <i className="fas fa-calendar-alt me-3" style={{ color: '#1A6E48' }}></i>
-              {teacher.name}'s Timetable
+              <i className="fas fa-calendar-alt me-2" style={{ color: '#1A6E48', fontSize: isMobile ? '18px' : '24px' }}></i>
+              {isMobile ? teacher.name?.split(' ')[0] : teacher.name}'s Timetable
             </h1>
-            <p style={{
-              color: '#6C757D',
-              margin: '4px 0 0 0',
-              fontSize: '14px',
-              fontWeight: '400'
-            }}>
-              Weekly schedule for {teacher.email} • View and manage teaching assignments
-            </p>
           </div>
-          <div className="d-flex gap-2 mt-2 mt-md-0">
+          <div className={`d-flex gap-2 ${isMobile ? 'flex-column w-100' : ''}`}>
             <Button
               onClick={handleExportPDF}
               style={{
@@ -199,12 +202,14 @@ const TeacherTimetable = () => {
                 borderRadius: '8px',
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px'
+                padding: isMobile ? '8px 12px' : '10px 20px',
+                fontSize: isMobile ? '12px' : '14px',
+                whiteSpace: 'nowrap'
               }}
+              className={isMobile ? 'flex-grow-1' : ''}
             >
               <i className="fas fa-download me-2"></i>
-              Export PDF
+              {isMobile ? 'PDF' : 'Export PDF'}
             </Button>
             <Button
               variant="outline-secondary"
@@ -212,15 +217,17 @@ const TeacherTimetable = () => {
                 borderRadius: '8px',
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px',
+                padding: isMobile ? '8px 12px' : '10px 20px',
+                fontSize: isMobile ? '12px' : '14px',
                 borderColor: '#dee2e6',
-                color: '#6C757D'
+                color: '#6C757D',
+                whiteSpace: 'nowrap'
               }}
               onClick={() => navigate('/teachers')}
+              className={isMobile ? 'flex-grow-1' : ''}
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Back to Teachers
+              <span className="back-btn-text">{isMobile ? 'Back' : 'Back to Teachers'}</span>
             </Button>
           </div>
         </div>
@@ -239,39 +246,44 @@ const TeacherTimetable = () => {
               color: 'white',
               border: 'none',
               borderRadius: '16px 16px 0 0',
-              padding: '24px'
+              padding: isMobile ? '16px' : '24px'
             }}>
-              <div className="d-flex justify-content-between align-items-center">
+              <div className={`d-flex justify-content-between align-items-${isMobile ? 'start' : 'center'} flex-${isMobile ? 'column' : 'row'} gap-2`}>
                 <div>
                   <div className="d-flex align-items-center mb-2">
                     <div style={{
-                      width: '48px',
-                      height: '48px',
+                      width: isMobile ? '40px' : '48px',
+                      height: isMobile ? '40px' : '48px',
                       borderRadius: '12px',
                       background: 'rgba(255,255,255,0.2)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      marginRight: '16px'
+                      marginRight: '12px',
+                      flexShrink: 0
                     }}>
-                      <i className="fas fa-chalkboard-teacher" style={{ fontSize: '20px', color: 'white' }}></i>
+                      <i className="fas fa-chalkboard-teacher" style={{ fontSize: isMobile ? '18px' : '20px', color: 'white' }}></i>
                     </div>
                     <div>
                       <h4 style={{
                         margin: 0,
                         fontFamily: 'Poppins, sans-serif',
                         fontWeight: '600',
-                        fontSize: '20px'
+                        fontSize: isMobile ? '16px' : '20px'
                       }}>
                         {teacher.name}
                       </h4>
                       <p style={{
                         margin: 0,
-                        fontSize: '14px',
+                        fontSize: isMobile ? '12px' : '14px',
                         opacity: 0.9,
-                        fontFamily: 'Poppins, sans-serif'
+                        fontFamily: 'Poppins, sans-serif',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: isMobile ? '100%' : 'auto'
                       }}>
-                        {teacher.subject_specialists ? teacher.subject_specialists.join(', ') : 'Teacher'} • {teacher.email}
+                        {teacher.subject_specialists ? teacher.subject_specialists.join(', ').substring(0, isMobile ? 30 : 50) : 'Teacher'} • {teacher.email?.substring(0, isMobile ? 15 : 25)}
                       </p>
                     </div>
                   </div>
@@ -279,8 +291,8 @@ const TeacherTimetable = () => {
               </div>
             </Card.Header>
             <Card.Body style={{ padding: '24px' }}>
-              <Tabs 
-                activeKey={activeTab} 
+              <Tabs
+                activeKey={activeTab}
                 onSelect={(k) => setActiveTab(k)}
                 className="border-0"
               >
@@ -292,28 +304,36 @@ const TeacherTimetable = () => {
                 }>
                   <div style={{ marginTop: '16px', marginBottom: '24px' }}>
                     <Alert style={{
-                      background: '#E3F2FD',
+                      background: 'var(--bs-primary-bg-subtle)',
                       border: 'none',
                       borderRadius: '12px',
-                      color: '#1976D2',
+                      color: 'var(--app-primary)',
                       fontFamily: 'Poppins, sans-serif'
                     }}>
                       <i className="fas fa-info-circle me-2"></i>
                       <strong>Weekly Schedule:</strong> Complete timetable view showing all assigned classes and periods.
                     </Alert>
                   </div>
-                  
-                  <TimetableGrid
-                    days={days}
-                    timeSlots={timeSlots}
-                    timetableSlots={timetableSlots}
-                    schoolProfile={schoolProfile}
-                    getSlotForTimeAndDay={getSlotForTimeAndDay}
-                    showBreakRows={true}
-                    viewType="teacher"
-                  />
+
+                  <div style={{
+                    overflowX: 'auto',
+                    overflowY: 'hidden',
+                    WebkitOverflowScrolling: 'touch',
+                    borderRadius: '8px',
+                    marginBottom: '24px'
+                  }}>
+                    <TimetableGrid
+                      days={days}
+                      timeSlots={timeSlots}
+                      timetableSlots={timetableSlots}
+                      schoolProfile={schoolProfile}
+                      getSlotForTimeAndDay={getSlotForTimeAndDay}
+                      showBreakRows={true}
+                      viewType="teacher"
+                    />
+                  </div>
                 </Tab>
-                
+
                 <Tab eventKey="workload" title={
                   <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '500' }}>
                     <i className="fas fa-chart-bar me-2"></i>

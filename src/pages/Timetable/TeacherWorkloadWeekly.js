@@ -122,21 +122,14 @@ const TeacherWorkloadWeekly = () => {
   const handleSubstitutionRequest = async (formData) => {
     try {
       // Call the backend API to mark teacher absent and get substitutions
-      const response = await fetch('/api/teachers/absent/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          teacher_id: formData.originalTeacher,
-          date: formData.date || new Date().toISOString().split('T')[0],
-          reason: formData.reason || 'Substitution requested'
-        })
+      const response = await teachersAPI.markAbsent({
+        teacher_id: parseInt(formData.originalTeacher),
+        date: formData.date || new Date().toISOString().split('T')[0],
+        reason: formData.reason || 'Substitution requested'
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.data) {
+        const result = response.data;
         alert(`Substitution request processed successfully. ${result.substitutions.length} substitutions made.`);
         
         // Refresh data to show updated workload
@@ -150,13 +143,11 @@ const TeacherWorkloadWeekly = () => {
           week: '',
           reason: ''
         });
-      } else {
-        const error = await response.json();
-        alert(`Error: ${error.error || 'Failed to process substitution request'}`);
       }
     } catch (error) {
       console.error('Error processing substitution request:', error);
-      alert('Failed to process substitution request. Please try again.');
+      const errorMessage = error.response?.data?.error || 'Failed to process substitution request. Please try again.';
+      alert(errorMessage);
     }
   };
 

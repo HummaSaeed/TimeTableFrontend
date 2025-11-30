@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://timetableadmin.com',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -96,7 +96,13 @@ export const teachersAPI = {
   getStats: () => api.get('/api/teachers/stats/'),
   getWorkload: (params) => api.get('/api/teachers/workload/', { params }),
   markAbsent: (data) => api.post('/api/teachers/absent/', data),
+  markAbsentBulk: (data) => api.post('/api/teachers/absent/bulk/', data),
   getTimetable: (id) => api.get(`/api/teachers/${id}/timetable/`),
+  getSubstitutionLogs: () => api.get('/api/substitution-logs/'),
+  getTeacherAbsences: () => api.get('/api/teacher-absences/'),
+  getTodaysSubstitutionGrid: (date) => api.get('/api/today-substitution-grid/', { params: date ? { date } : {} }),
+  getTeacherSubstitutionStats: (date) => api.get('/api/teacher-substitution-stats/', { params: date ? { date } : {} }),
+  getSubstitutionStats: (params) => api.get('/api/teacher-substitution-stats/', { params }),
 };
 
 // Classes API
@@ -207,7 +213,7 @@ export const setAuthTokens = (access, refresh, userType) => {
 export const checkAPIHealth = async () => {
   try {
     console.log('Checking API health...');
-    const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://timetableadmin.com'}/api/register/`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/register/`, {
       method: 'OPTIONS',
       headers: {
         'Content-Type': 'application/json',

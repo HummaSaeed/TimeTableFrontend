@@ -65,18 +65,28 @@ const Sidebar = ({ isOpen, onClose }) => {
       icon: 'fa-book',
       label: 'Subjects'
     },
-        {
-          path: '/timetable',
-          icon: 'fa-calendar-alt',
+    {
+      path: '/timetable',
+      icon: 'fa-calendar-alt',
       label: 'Timetable'
-        },
-        {
-          path: '/timetable/generate',
-          icon: 'fa-magic',
+    },
+    {
+      path: '/timetable/generate',
+      icon: 'fa-magic',
       label: 'Generate Schedule'
     },
     {
+      path: '/timetable/today-schedule',
+      icon: 'fa-calendar-day',
+      label: "Today's Schedule"
+    },
+    {
       path: '/timetable/substitution',
+      icon: 'fa-user-clock',
+      label: 'Substitution Grid'
+    },
+    {
+      path: '/timetable/substitution-tracking',
       icon: 'fa-exchange-alt',
       label: 'Substitution Tracking'
     },
@@ -116,7 +126,8 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navStyles = {
     padding: '20px 0',
     flex: 1,
-    overflowY: 'hidden'
+    overflowY: 'auto',
+    overflowX: 'hidden'
   };
 
   const navLinkStyles = (isActive) => ({

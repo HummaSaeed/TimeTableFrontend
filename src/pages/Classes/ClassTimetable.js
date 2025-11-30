@@ -16,28 +16,35 @@ const ClassTimetable = () => {
   const [error, setError] = useState(null);
   const [classData, setClassData] = useState(null);
   const [timetableSlots, setTimetableSlots] = useState([]);
+  const [schoolProfile, setSchoolProfile] = useState(null);
   const [selectedView, setSelectedView] = useState('grid'); // grid or list
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const timeSlots = [
     '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00',
     '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00'
   ];
-  
+
 
   useEffect(() => {
     fetchClassData();
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, [classId]);
 
   const fetchClassData = async () => {
     try {
       setLoading(true);
-      const [classResponse, slotsResponse] = await Promise.all([
+      const [classResponse, slotsResponse, profileResponse] = await Promise.all([
         classesAPI.getById(classId),
-        timetableAPI.getAll()
+        timetableAPI.getAll(),
+        schoolProfileAPI.getProfile()
       ]);
 
       setClassData(classResponse.data);
+      setSchoolProfile(profileResponse.data);
       const classSlots = (slotsResponse.data.results || slotsResponse.data)
         .filter(slot => slot.class_name === classResponse.data.class_name);
       setTimetableSlots(classSlots);
@@ -51,7 +58,7 @@ const ClassTimetable = () => {
 
   const downloadClassTimetablePDF = async () => {
     try {
-      const result = await pdfService.generateClassTimetablePDF(classData, timetableSlots);
+      const result = await pdfService.generateClassTimetablePDF(classData, timetableSlots, schoolProfile);
       pdfService.downloadPDF(result.data, result.filename);
     } catch (error) {
       setError('Failed to download PDF');
@@ -60,7 +67,7 @@ const ClassTimetable = () => {
 
   const getSlotForTimeAndDay = (timeSlot, day) => {
     const [startTime] = timeSlot.split('-');
-    return timetableSlots.find(slot => 
+    return timetableSlots.find(slot =>
       slot.day === day && slot.start_time === startTime
     );
   };
@@ -88,11 +95,11 @@ const ClassTimetable = () => {
                   return (
                     <td key={`${day}-${timeSlot}`} className="text-center p-2">
                       {slot ? (
-                        <div className="timetable-slot p-2 rounded" 
-                             style={{ 
-                               backgroundColor: slot.is_active ? '#d4edda' : '#f8d7da',
-                               border: '1px solid #c3e6cb'
-                             }}>
+                        <div className="timetable-slot p-2 rounded"
+                          style={{
+                            backgroundColor: slot.is_active ? '#d4edda' : '#f8d7da',
+                            border: '1px solid #c3e6cb'
+                          }}>
                           <div className="fw-bold small">{slot.subject_name}</div>
                           <div className="text-muted small">{slot.teacher_name}</div>
                           <div className="text-muted small">{slot.room_number}</div>
@@ -212,7 +219,7 @@ const ClassTimetable = () => {
             fontFamily: 'Poppins, sans-serif',
             fontWeight: '600'
           }}>Class not found</h5>
-          <Button 
+          <Button
             style={{
               background: '#1A6E48',
               border: 'none',
@@ -241,27 +248,29 @@ const ClassTimetable = () => {
     }}>
       {/* Header Section */}
       <div className="mb-4">
-        <div className="d-flex justify-content-between align-items-center flex-wrap">
-          <div>
+        <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div style={{ flex: 1, minWidth: '200px' }}>
             <h1 style={{
               fontWeight: '700',
               color: '#333333',
               margin: 0,
               fontFamily: 'Poppins, sans-serif',
-              fontSize: '28px'
+              fontSize: isMobile ? '20px' : '28px'
             }}>
-              {classData.class_name} - {classData.section} Timetable
+              {isMobile ? classData.class_name : `${classData.class_name} - ${classData.section}`} Timetable
             </h1>
-            <p style={{
-              color: '#6C757D',
-              margin: '4px 0 0 0',
-              fontSize: '14px',
-              fontWeight: '400'
-            }}>
-              View and manage timetable for this class
-            </p>
+            {!isMobile && (
+              <p style={{
+                color: '#6C757D',
+                margin: '4px 0 0 0',
+                fontSize: '14px',
+                fontWeight: '400'
+              }}>
+                View and manage timetable for this class
+              </p>
+            )}
           </div>
-          <div className="d-flex gap-2 mt-2 mt-md-0">
+          <div className={`d-flex gap-2 ${isMobile ? 'flex-column w-100' : ''}`}>
             <Button
               style={{
                 background: 'transparent',
@@ -269,14 +278,16 @@ const ClassTimetable = () => {
                 borderRadius: '8px',
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px',
-                color: '#6C757D'
+                padding: isMobile ? '8px 12px' : '10px 20px',
+                fontSize: isMobile ? '12px' : '14px',
+                color: '#6C757D',
+                whiteSpace: 'nowrap'
               }}
               onClick={() => navigate('/classes')}
+              className={isMobile ? 'flex-grow-1' : ''}
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Back to Classes
+              <span className="back-btn-text">{isMobile ? 'Back' : 'Back to Classes'}</span>
             </Button>
             <Button
               style={{
@@ -285,40 +296,42 @@ const ClassTimetable = () => {
                 borderRadius: '8px',
                 fontFamily: 'Poppins, sans-serif',
                 fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px'
+                padding: isMobile ? '8px 12px' : '10px 20px',
+                fontSize: isMobile ? '12px' : '14px',
+                whiteSpace: 'nowrap'
               }}
               onClick={downloadClassTimetablePDF}
+              className={isMobile ? 'flex-grow-1' : ''}
             >
               <i className="fas fa-download me-2"></i>
-              Download PDF
+              {isMobile ? 'PDF' : 'Download PDF'}
             </Button>
           </div>
         </div>
       </div>
-      <Container>
+      <Container fluid={isMobile} className={isMobile ? 'px-0' : ''}>
         {/* Class Information */}
-        <Row className="mb-4">
-          <Col md={6}>
+        <Row className="mb-4 g-3">
+          <Col xs={12} md={6}>
             <Card style={{
               background: '#FFFFFF',
               border: 'none',
               borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)'
             }}>
-              <Card.Body style={{ padding: '24px' }}>
+              <Card.Body style={{ padding: isMobile ? '16px' : '24px' }}>
                 <h5 style={{
                   fontWeight: '600',
                   marginBottom: '20px',
                   fontFamily: 'Poppins, sans-serif',
-                  fontSize: '18px',
+                  fontSize: isMobile ? '16px' : '18px',
                   color: '#333333'
                 }}>
                   <i className="fas fa-info-circle me-2" style={{ color: '#1A6E48' }}></i>
                   Class Information
                 </h5>
                 <Row>
-                  <Col md={6}>
+                  <Col xs={12} md={6}>
                     <p style={{
                       marginBottom: '12px',
                       fontFamily: 'Poppins, sans-serif',
@@ -484,7 +497,7 @@ const ClassTimetable = () => {
               </h5>
               <div className="d-flex gap-2">
                 <Dropdown>
-                  <Dropdown.Toggle 
+                  <Dropdown.Toggle
                     style={{
                       background: 'transparent',
                       border: '1px solid #1A6E48',
@@ -512,14 +525,14 @@ const ClassTimetable = () => {
               </div>
             </div>
           </Card.Header>
-          <Card.Body className="p-0">
+          <Card.Body className="p-0" style={{ overflowX: 'auto' }}>
             {timetableSlots.length === 0 ? (
               <div className="text-center py-5">
                 <i className="fas fa-calendar-times text-muted mb-3" style={{ fontSize: '3rem' }}></i>
                 <h5 className="text-muted">No timetable slots found</h5>
                 <p className="text-muted">This class doesn't have any timetable slots assigned yet.</p>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={() => navigate('/timetable')}
                 >
                   <i className="fas fa-plus me-2"></i>

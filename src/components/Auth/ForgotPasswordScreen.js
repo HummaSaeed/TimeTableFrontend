@@ -50,14 +50,8 @@ const ForgotPasswordScreen = () => {
       <Container>
         <Row className="justify-content-center">
           <Col md={6} lg={5} xl={4}>
-            <Card className="border-0 shadow-lg" style={{
-              background: 'rgba(248, 253, 248, 0.92)',
-              backdropFilter: 'blur(5px)',
-              border: '1px solid rgba(45, 90, 39, 0.2)',
-              boxShadow: '0 8px 32px rgba(45, 90, 39, 0.1)',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              <Card.Body className="p-5">
+            <Card className="border-0 auth-card">
+              <Card.Body>
                 <div className="text-center mb-4">
                   <Button
                     variant="link"
@@ -66,23 +60,11 @@ const ForgotPasswordScreen = () => {
                   >
                     <i className="fas fa-arrow-left"></i>
                   </Button>
-                  
-                  <div className="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                       style={{ width: '80px', height: '80px' }}>
-                    <i className="fas fa-lock-open text-success" style={{ fontSize: '2rem' }}></i>
+                  <div className="auth-header-icon">
+                    <i className="fas fa-lock-open"></i>
                   </div>
-                  <h3 className="fw-bold mb-2" style={{ 
-                    color: '#2d5a27', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '2rem',
-                    letterSpacing: '-0.5px'
-                  }}>Reset Password</h3>
-                  <p className="mb-0" style={{ 
-                    color: '#4a7c59', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '0.95rem',
-                    fontWeight: '400'
-                  }}>Enter your email to receive reset instructions</p>
+                  <h3 className="fw-bold mb-2 auth-title">Reset Password</h3>
+                  <p className="mb-0 auth-subtitle">Enter your email to receive reset instructions</p>
                 </div>
 
                 {error && (
@@ -99,24 +81,13 @@ const ForgotPasswordScreen = () => {
 
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-4">
-                    <Form.Label style={{ 
-                      fontFamily: 'Poppins, sans-serif', 
-                      fontWeight: '600',
-                      color: '#2d5a27',
-                      fontSize: '0.9rem'
-                    }}>Email Address</Form.Label>
+                    <Form.Label>Email Address</Form.Label>
                     <Form.Control
                       type="email"
                       placeholder="Enter your email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      style={{
-                        borderRadius: '8px',
-                        border: '1px solid rgba(45, 90, 39, 0.2)',
-                        padding: '12px 16px',
-                        fontFamily: 'Poppins, sans-serif'
-                      }}
                     />
                     <Form.Text className="text-muted">
                       We'll send you a link to reset your password.
@@ -127,18 +98,8 @@ const ForgotPasswordScreen = () => {
                     type="submit"
                     variant="success"
                     size="lg"
-                    className="w-100 mb-3"
+                    className="btn-auth mb-3 w-100"
                     disabled={loading}
-                    style={{
-                      fontFamily: 'Poppins, sans-serif',
-                      fontWeight: '600',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)',
-                      border: 'none',
-                      padding: '12px 0',
-                      fontSize: '1rem',
-                      letterSpacing: '0.5px'
-                    }}
                   >
                     {loading ? (
                       <>
@@ -151,7 +112,7 @@ const ForgotPasswordScreen = () => {
                   </Button>
 
                   <div className="text-center">
-                    <p className="text-muted mb-0">
+                    <p className="text-muted mb-0 auth-footnote">
                       Remember your password?{' '}
                       <Link to="/login" className="text-decoration-none text-success">
                         Sign In

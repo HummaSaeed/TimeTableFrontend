@@ -16,7 +16,6 @@ const LoginScreen = () => {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState('school');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState(null);
   const { login, loading } = useAuth();
@@ -66,7 +65,7 @@ const LoginScreen = () => {
     
     try {
       console.log('Attempting login...');
-      const result = await login(formData, userType);
+      const result = await login(formData, 'school');
       
       console.log('Login result:', result);
       
@@ -122,31 +121,14 @@ const LoginScreen = () => {
       <Container>
         <Row className="justify-content-center">
           <Col md={6} lg={5} xl={4}>
-            <Card className="border-0 shadow-lg" style={{
-              background: 'rgba(248, 253, 248, 0.92)',
-              backdropFilter: 'blur(5px)',
-              border: '1px solid rgba(45, 90, 39, 0.2)',
-              boxShadow: '0 8px 32px rgba(45, 90, 39, 0.1)',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              <Card.Body className="p-5">
+            <Card className="border-0 auth-card">
+              <Card.Body>
                 <div className="text-center mb-4">
-                  <div className="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                       style={{ width: '80px', height: '80px' }}>
-                    <i className="fas fa-graduation-cap text-success" style={{ fontSize: '2rem' }}></i>
+                  <div className="auth-header-icon">
+                    <i className="fas fa-graduation-cap"></i>
                   </div>
-                  <h2 className="fw-bold mb-2" style={{ 
-                    color: '#2d5a27', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '2.2rem',
-                    letterSpacing: '-0.5px'
-                  }}>EduScheduler Pro</h2>
-                  <p className="mb-0" style={{ 
-                    color: '#4a7c59', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '0.95rem',
-                    fontWeight: '400'
-                  }}>Professional Timetable Management System</p>
+                  <h2 className="fw-bold mb-2 auth-title">EduScheduler Pro</h2>
+                  <p className="mb-0 auth-subtitle">Professional Timetable Management System</p>
                 </div>
 
                 {localError && (
@@ -155,11 +137,6 @@ const LoginScreen = () => {
                     onClose={() => setLocalError(null)} 
                     dismissible
                     className="mb-3"
-                    style={{
-                      fontFamily: 'Poppins, sans-serif',
-                      fontSize: '0.9rem',
-                      borderRadius: '8px'
-                    }}
                   >
                     <div className="d-flex align-items-center">
                       <i className="fas fa-exclamation-triangle me-2"></i>
@@ -170,41 +147,7 @@ const LoginScreen = () => {
 
                 <Form onSubmit={handleSubmit} noValidate>
                   <Form.Group className="mb-3">
-                    <Form.Label style={{ 
-                      fontFamily: 'Poppins, sans-serif', 
-                      fontWeight: '600',
-                      color: '#2d5a27',
-                      fontSize: '0.9rem'
-                    }}>Login Type</Form.Label>
-                    <div className="d-flex gap-3">
-                      <Form.Check
-                        type="radio"
-                        name="userType"
-                        id="school"
-                        label="Administrator"
-                        checked={userType === 'school'}
-                        onChange={() => setUserType('school')}
-                        disabled={isSubmitting}
-                      />
-                      <Form.Check
-                        type="radio"
-                        name="userType"
-                        id="teacher"
-                        label="Teacher"
-                        checked={userType === 'teacher'}
-                        onChange={() => setUserType('teacher')}
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label style={{ 
-                      fontFamily: 'Poppins, sans-serif', 
-                      fontWeight: '600',
-                      color: '#2d5a27',
-                      fontSize: '0.9rem'
-                    }}>Email</Form.Label>
+                    <Form.Label>Email</Form.Label>
                     <Form.Control
                       type="email"
                       placeholder="Enter your email"
@@ -213,22 +156,11 @@ const LoginScreen = () => {
                       required
                       disabled={isSubmitting}
                       autoComplete="email"
-                      style={{
-                        borderRadius: '8px',
-                        border: '1px solid rgba(45, 90, 39, 0.2)',
-                        padding: '12px 16px',
-                        fontFamily: 'Poppins, sans-serif'
-                      }}
                     />
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label style={{ 
-                      fontFamily: 'Poppins, sans-serif', 
-                      fontWeight: '600',
-                      color: '#2d5a27',
-                      fontSize: '0.9rem'
-                    }}>Password</Form.Label>
+                    <Form.Label>Password</Form.Label>
                     <div className="password-field-container">
                       <Form.Control
                         type={showPassword ? "text" : "password"}
@@ -238,12 +170,6 @@ const LoginScreen = () => {
                         required
                         disabled={isSubmitting}
                         autoComplete="current-password"
-                        style={{
-                          borderRadius: '8px',
-                          border: '1px solid rgba(45, 90, 39, 0.2)',
-                          padding: '12px 16px',
-                          fontFamily: 'Poppins, sans-serif'
-                        }}
                       />
                       <Button
                         type="button"
@@ -257,7 +183,7 @@ const LoginScreen = () => {
                     </div>
                   </Form.Group>
 
-                  <div className="d-flex justify-content-between align-items-center mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-4 auth-utility">
                     <Form.Check
                       type="checkbox"
                       id="remember"
@@ -271,20 +197,10 @@ const LoginScreen = () => {
 
                   <Button
                     type="submit"
-                    variant="success"
-                    size="lg"
-                    className="w-100 mb-3"
-                    disabled={isSubmitting || loading}
-                    style={{
-                      fontFamily: 'Poppins, sans-serif',
-                      fontWeight: '600',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)',
-                      border: 'none',
-                      padding: '12px 0',
-                      fontSize: '1rem',
-                      letterSpacing: '0.5px'
-                    }}
+                  variant="success"
+                  size="lg"
+                  className="btn-auth mb-3 w-100"
+                  disabled={isSubmitting || loading}
                   >
                     {isSubmitting ? (
                       <>
@@ -306,7 +222,7 @@ const LoginScreen = () => {
 
 
                   <div className="text-center">
-                    <p className="text-muted mb-0">
+                  <p className="text-muted mb-0 auth-footnote">
                       Don't have an account?{' '}
                       <Link to="/register" className="text-decoration-none text-success">
                         Sign Up

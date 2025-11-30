@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const SubjectsList = () => {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   const [showModal, setShowModal] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +24,11 @@ const SubjectsList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    onResize();
     fetchSubjects();
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   const fetchSubjects = async () => {
@@ -145,8 +150,8 @@ const SubjectsList = () => {
               {value}
             </h2>
           </div>
-          <div style={{
-            background: color === 'primary' ? '#E3F2FD' : 
+            <div style={{
+            background: color === 'primary' ? 'var(--bs-primary-bg-subtle)' : 
                       color === 'success' ? '#D8F3DC' : 
                       color === 'warning' ? '#FFF3E0' : '#E8F5E8',
             borderRadius: '12px',
@@ -156,7 +161,7 @@ const SubjectsList = () => {
             justifyContent: 'center'
           }}>
             <i className={`fas ${icon}`} style={{
-              color: color === 'primary' ? '#1976D2' : 
+              color: color === 'primary' ? 'var(--app-primary)' : 
                      color === 'success' ? '#1A6E48' : 
                      color === 'warning' ? '#F57C00' : '#1A6E48',
               fontSize: '24px'
@@ -176,7 +181,7 @@ const SubjectsList = () => {
         minHeight: '100vh'
       }}>
         <div className="text-center" style={{ paddingTop: '100px' }}>
-          <Spinner animation="border" style={{ color: '#1A6E48', width: '3rem', height: '3rem' }} />
+          <Spinner animation="border" style={{ color: 'var(--app-primary)', width: '3rem', height: '3rem' }} />
           <p style={{ marginTop: '16px', color: '#6C757D', fontFamily: 'Poppins, sans-serif' }}>
             Loading subjects...
           </p>
@@ -400,7 +405,8 @@ const SubjectsList = () => {
             </div>
           </Card.Header>
           <Card.Body style={{ padding: '0 24px 24px 24px' }}>
-            <Table responsive hover className="mb-0" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {!isMobile ? (
+              <Table responsive hover className="mb-0" style={{ fontFamily: 'Poppins, sans-serif' }}>
               <thead style={{ background: '#F8F9FA' }}>
                 <tr>
                   <th style={{
@@ -462,13 +468,13 @@ const SubjectsList = () => {
                           width: '48px',
                           height: '48px',
                           borderRadius: '12px',
-                          background: '#E3F2FD',
+                          background: 'var(--bs-primary-bg-subtle)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: '12px'
                         }}>
-                          <i className="fas fa-book" style={{ color: '#1976D2', fontSize: '18px' }}></i>
+                          <i className="fas fa-book" style={{ color: 'var(--app-primary)', fontSize: '18px' }}></i>
                         </div>
                         <div>
                           <div style={{
@@ -578,6 +584,41 @@ const SubjectsList = () => {
                 ))}
               </tbody>
             </Table>
+            ) : (
+              <div className="mobile-card-list">
+                {filteredSubjects.map(subject => (
+                  <Card key={subject.id} className="mb-3">
+                    <Card.Body>
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{subject.name}</div>
+                          <div className="text-muted" style={{ fontSize: 13 }}>{subject.code}</div>
+                          <div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>{subject.description || 'No description'}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <Badge bg={subject.is_active ? 'success' : 'danger'}>{subject.is_active ? 'Active' : 'Inactive'}</Badge>
+                          <div className="mt-2 d-flex flex-column gap-2">
+                            <Button size="sm" onClick={() => handleEdit(subject)}>Edit</Button>
+                            <Dropdown>
+                              <Dropdown.Toggle size="sm">•••</Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                {subject.is_active ? (
+                                  <Dropdown.Item onClick={() => handleActivate(subject.id)}>Deactivate</Dropdown.Item>
+                                ) : (
+                                  <Dropdown.Item onClick={() => handleActivate(subject.id)}>Activate</Dropdown.Item>
+                                )}
+                                <Dropdown.Divider />
+                                <Dropdown.Item onClick={() => handleDelete(subject.id)} className="text-danger">Delete</Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </div>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </div>
+            )}
             {filteredSubjects.length === 0 && (
               <div className="text-center py-5">
                 <i className="fas fa-book-open text-muted mb-3" style={{ fontSize: '3rem' }}></i>

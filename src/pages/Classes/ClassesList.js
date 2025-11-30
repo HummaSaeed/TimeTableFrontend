@@ -10,13 +10,18 @@ const ClassesList = () => {
   const [classes, setClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    onResize();
     fetchData();
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   const fetchData = async () => {
@@ -258,7 +263,8 @@ const ClassesList = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)'
         }}>
           <Card.Body style={{ padding: '24px' }}>
-            <Table responsive hover className="mb-0" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {!isMobile ? (
+              <Table responsive hover className="mb-0" style={{ fontFamily: 'Poppins, sans-serif' }}>
               <thead style={{ background: '#F8F9FA' }}>
                 <tr>
                   <th style={{
@@ -456,6 +462,39 @@ const ClassesList = () => {
                 ))}
               </tbody>
             </Table>
+        ) : (
+          <div className="mobile-card-list">
+            {filteredClasses.map((classItem) => (
+              <Card key={classItem.id} className="mb-3">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{`Class ${classItem.class_name} - ${classItem.section}`}</div>
+                      <div className="text-muted" style={{ fontSize: 13 }}>Room: {classItem.room_number || 'N/A'}</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Teacher: {classItem.class_teacher_name || 'Not assigned'}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <Badge bg={classItem.is_active ? 'success' : 'danger'}>{classItem.is_active ? 'Active' : 'Inactive'}</Badge>
+                      <div className="mt-2 d-flex flex-column gap-2">
+                        <Button size="sm" variant="outline-secondary" onClick={() => handleViewTimetable(classItem.id)}>Timetable</Button>
+                        <Button size="sm" style={{ background: 'var(--app-primary)', color: 'white' }} onClick={() => handleEdit(classItem)}>Edit</Button>
+                        <Dropdown>
+                          <Dropdown.Toggle size="sm">•••</Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => handleGenerateTimetable(classItem.id)}>Generate Timetable</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleManageSubjects(classItem.id)}>Manage Subjects</Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Item onClick={() => handleDelete(classItem.id)} className="text-danger">Delete</Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </div>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+        )}
             {filteredClasses.length === 0 && (
               <div style={{
                 textAlign: 'center',

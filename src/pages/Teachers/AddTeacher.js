@@ -184,31 +184,12 @@ const AddTeacher = () => {
             }}>
               Add New Teacher
             </h1>
-            <p style={{
-              color: '#6C757D',
-              margin: '4px 0 0 0',
-              fontSize: '14px',
-              fontWeight: '400'
-            }}>
-              Register a new teaching staff member to your school
-            </p>
+            {/* Tagline removed for a cleaner header */}
           </div>
           <div className="d-flex gap-2 mt-2 mt-md-0">
-              <Button 
-              variant="outline-secondary"
-              style={{
-                borderRadius: '8px',
-                fontFamily: 'Poppins, sans-serif',
-                fontWeight: '500',
-                padding: '10px 20px',
-                fontSize: '14px',
-                borderColor: '#dee2e6',
-                color: '#6C757D'
-              }}
-                onClick={() => navigate('/teachers')}
-              >
+              <Button variant="outline-secondary" style={{ borderRadius: '8px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', padding: '10px 20px', fontSize: '14px', borderColor: '#dee2e6', color: '#6C757D' }} onClick={() => navigate('/teachers')}>
                 <i className="fas fa-arrow-left me-2"></i>
-                Back to Teachers
+                <span className="back-btn-text">Back to Teachers</span>
               </Button>
           </div>
         </div>
@@ -217,7 +198,7 @@ const AddTeacher = () => {
       <Container fluid className="px-0">
         <Row className="justify-content-center">
           <Col lg={10} xl={8}>
-            <Card style={{
+            <Card className="teacher-form-card" style={{
               background: '#FFFFFF',
               border: 'none',
               borderRadius: '16px',
@@ -585,7 +566,10 @@ const AddTeacher = () => {
                         <Form.Label>Qualification</Form.Label>
                         <Form.Select name="qualification" value={formData.qualification} onChange={handleChange}>
                           <option value="">Select qualification</option>
-                          {[ 'BA','MA','BS Computer Science','B.Ed','M.Ed','M.Sc','M.Phil' ].map(q => (
+                          {[
+                            'Matric', 'FSc', 'FA', 'Diploma', 'Bachelors (BA)', 'Bachelors (BSc)', 'BS', 'BS Computer Science',
+                            'B.Ed', 'M.Ed', 'Masters (MA)', 'Masters (MSc)', 'MS', 'MPhil', 'PhD'
+                          ].map(q => (
                             <option key={q} value={q}>{q}</option>
                           ))}
                         </Form.Select>

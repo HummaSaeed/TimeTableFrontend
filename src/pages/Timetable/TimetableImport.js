@@ -33,7 +33,8 @@ const TimetableImport = () => {
     notes: ''
   });
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // Backend accepts Monday-Friday; keep frontend aligned to avoid choice validation errors
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const periods = Array.from({ length: 10 }, (_, i) => i + 1);
 
   useEffect(() => {
@@ -179,10 +180,11 @@ const TimetableImport = () => {
       return;
     }
 
-    const newSlot = { ...formData, id: Date.now() };
+    // Add class_obj (class ID) to the slot for backend compatibility
+    const newSlot = { ...formData, id: Date.now(), class_obj: classObj.id };
     console.log('Created new slot:', newSlot);
     console.log('Validated objects:', { classObj, subjectObj, teacherObj });
-    
+
     setTimetableSlots(prev => {
       const updated = [...prev, newSlot];
       console.log('Updated timetable slots:', updated);
@@ -452,14 +454,7 @@ const TimetableImport = () => {
           </Alert>
         )}
 
-        {/* Debug Info */}
-        {timetableSlots.length > 0 && (
-          <Alert variant="info" className="mb-4">
-            <i className="fas fa-info-circle me-2"></i>
-            <strong>Debug Info:</strong> You have {timetableSlots.length} slot(s) ready to save. 
-            Use the "Debug" button to see detailed information in the console.
-          </Alert>
-        )}
+        {/* Debug info removed for production UI */}
 
         {/* Data Validation Info */}
         <Alert variant="warning" className="mb-4">
@@ -510,25 +505,7 @@ const TimetableImport = () => {
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h6 className="mb-0">Timetable Slots Added: {timetableSlots.length}</h6>
                   <div>
-                    <Button 
-                      variant="outline-secondary" 
-                      size="sm"
-                      onClick={() => {
-                        console.log('Current timetable slots:', timetableSlots);
-                        console.log('Current form data:', formData);
-                        alert('Check browser console for debug info');
-                      }}
-                      className="me-2"
-                      title="Show debug information"
-                    >
-                      <i className="fas fa-bug me-1"></i>
-                      Debug
-                    </Button>
-                    <Button 
-                      variant="success" 
-                      onClick={() => setShowAddSlot(true)}
-                      disabled={timetableSlots.length >= 50}
-                    >
+                    <Button variant="success" onClick={() => setShowAddSlot(true)} disabled={timetableSlots.length >= 50}>
                       <i className="fas fa-plus me-2"></i>
                       Add New Slot
                     </Button>

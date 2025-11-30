@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Container, Row, Col, Card, Form, Button, Alert, 
-  InputGroup, Badge, Spinner 
+import {
+  Container, Row, Col, Card, Form, Button, Alert,
+  InputGroup, Badge, Spinner
 } from 'react-bootstrap';
 import { subjectsAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -20,30 +20,39 @@ const AddSubject = () => {
   });
   const [showCustomInput, setShowCustomInput] = useState(false);
   const commonSubjects = [
-    'English','Urdu','Mathematics','Computer','General Knowledge','Biology','Chemistry','Physics','Islamiat','Pakistan Studies','Social Studies','General Science'
+    'English', 'Urdu', 'Mathematics', 'Computer', 'General Knowledge', 'Biology', 'Chemistry', 'Physics', 'Islamiat', 'Pakistan Studies', 'Social Studies', 'General Science'
   ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    if (name === 'name' && value === 'Other') {
-      setShowCustomInput(true);
-      setFormData(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    } else if (name === 'name' && value !== 'Other') {
-      setShowCustomInput(false);
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+
+    if (name === 'name') {
+      if (!showCustomInput && value === 'Other') {
+        setShowCustomInput(true);
+        setFormData(prev => ({
+          ...prev,
+          [name]: ''
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }));
     }
+  };
+
+  const handleCancelCustom = () => {
+    setShowCustomInput(false);
+    setFormData(prev => ({
+      ...prev,
+      name: ''
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -118,7 +127,7 @@ const AddSubject = () => {
               onClick={() => navigate('/subjects')}
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Back to Subjects
+              <span className="back-btn-text">Back to Subjects</span>
             </Button>
           </div>
         </div>
@@ -143,13 +152,13 @@ const AddSubject = () => {
                     width: '48px',
                     height: '48px',
                     borderRadius: '12px',
-                    background: '#E3F2FD',
+                    background: 'var(--bs-primary-bg-subtle)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: '16px'
                   }}>
-                    <i className="fas fa-book-open" style={{ color: '#1976D2', fontSize: '20px' }}></i>
+                    <i className="fas fa-book-open" style={{ color: 'var(--app-primary)', fontSize: '20px' }}></i>
                   </div>
                   <div>
                     <h4 style={{
@@ -199,21 +208,31 @@ const AddSubject = () => {
                           Subject Name *
                         </Form.Label>
                         {showCustomInput ? (
-                          <Form.Control
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            required
-                            placeholder="Enter custom subject name..."
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid #dee2e6',
-                              fontFamily: 'Poppins, sans-serif',
-                              fontSize: '14px',
-                              padding: '12px 16px'
-                            }}
-                          />
+                          <div className="d-flex gap-2">
+                            <Form.Control
+                              type="text"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              required
+                              placeholder="Enter custom subject name..."
+                              style={{
+                                borderRadius: '8px',
+                                border: '1px solid #dee2e6',
+                                fontFamily: 'Poppins, sans-serif',
+                                fontSize: '14px',
+                                padding: '12px 16px'
+                              }}
+                            />
+                            <Button
+                              variant="outline-danger"
+                              onClick={handleCancelCustom}
+                              title="Cancel custom input"
+                              style={{ borderRadius: '8px' }}
+                            >
+                              <i className="fas fa-times"></i>
+                            </Button>
+                          </div>
                         ) : (
                           <Form.Select
                             name="name"
@@ -316,7 +335,7 @@ const AddSubject = () => {
                   {/* Action Buttons */}
                   <Row className="mt-5">
                     <Col className="d-flex justify-content-end gap-3">
-                      <Button 
+                      <Button
                         variant="outline-secondary"
                         onClick={resetForm}
                         disabled={loading}
@@ -333,11 +352,11 @@ const AddSubject = () => {
                         <i className="fas fa-undo me-2"></i>
                         Reset Form
                       </Button>
-                      <Button 
+                      <Button
                         type="submit"
                         disabled={loading}
                         style={{
-                          background: '#1A6E48',
+                          background: 'var(--app-primary)',
                           border: 'none',
                           borderRadius: '8px',
                           color: 'white',

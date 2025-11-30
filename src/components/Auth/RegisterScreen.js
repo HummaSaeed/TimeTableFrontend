@@ -91,31 +91,14 @@ const RegisterScreen = () => {
       <Container>
         <Row className="justify-content-center">
           <Col md={8} lg={6} xl={5}>
-            <Card className="border-0 shadow-lg" style={{
-              background: 'rgba(248, 253, 248, 0.92)',
-              backdropFilter: 'blur(5px)',
-              border: '1px solid rgba(45, 90, 39, 0.2)',
-              boxShadow: '0 8px 32px rgba(45, 90, 39, 0.1)',
-              fontFamily: 'Poppins, sans-serif'
-            }}>
-              <Card.Body className="p-5">
+            <Card className="border-0 auth-card">
+              <Card.Body>
                 <div className="text-center mb-4">
-                  <div className="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                       style={{ width: '80px', height: '80px' }}>
-                    <i className="fas fa-graduation-cap text-success" style={{ fontSize: '2rem' }}></i>
+                  <div className="auth-header-icon">
+                    <i className="fas fa-graduation-cap"></i>
                   </div>
-                  <h3 className="fw-bold mb-2" style={{ 
-                    color: '#2d5a27', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '2rem',
-                    letterSpacing: '-0.5px'
-                  }}>Create Account</h3>
-                  <p className="mb-0" style={{ 
-                    color: '#4a7c59', 
-                    fontFamily: 'Poppins, sans-serif',
-                    fontSize: '0.95rem',
-                    fontWeight: '400'
-                  }}>Join EduScheduler Pro - Professional Timetable Management</p>
+                  <h3 className="fw-bold mb-2 auth-title">Create Account</h3>
+                  <p className="mb-0 auth-subtitle">Join EduScheduler Pro - Professional Timetable Management</p>
                 </div>
 
                 {error && (
@@ -128,7 +111,9 @@ const RegisterScreen = () => {
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label>School Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Label>
+                          School Name <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="text"
                           placeholder="e.g., St. Mary's High School"
@@ -140,7 +125,9 @@ const RegisterScreen = () => {
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label>School Code <span className="text-danger">*</span></Form.Label>
+                        <Form.Label>
+                          School Code <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="text"
                           placeholder="e.g., SMHS001"
@@ -223,23 +210,13 @@ const RegisterScreen = () => {
                     type="submit"
                     variant="success"
                     size="lg"
-                    className="w-100 mb-3"
-                    style={{
-                      fontFamily: 'Poppins, sans-serif',
-                      fontWeight: '600',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)',
-                      border: 'none',
-                      padding: '12px 0',
-                      fontSize: '1rem',
-                      letterSpacing: '0.5px'
-                    }}
+                    className="btn-auth mb-3 w-100"
                   >
                     Create Account
                   </Button>
 
                   <div className="text-center">
-                    <p className="text-muted mb-0">
+                    <p className="text-muted mb-0 auth-footnote">
                       Already have an account?{' '}
                       <Link to="/login" className="text-decoration-none text-success">
                         Sign In

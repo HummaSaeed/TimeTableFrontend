@@ -34,7 +34,7 @@ const EditTeacher = () => {
         const res = await teachersAPI.getById(teacherId);
         const t = res.data;
         console.log('Fetched teacher data:', t);
-        
+
         const formDataObj = {
           name: t.name || '',
           email: t.email || '',
@@ -51,7 +51,7 @@ const EditTeacher = () => {
           class_teacher_section: t.class_teacher_section ?? '',
           is_active: !!t.is_active,
         };
-        
+
         console.log('Setting form data:', formDataObj);
         setFormData(formDataObj);
       } catch (e) {
@@ -73,7 +73,7 @@ const EditTeacher = () => {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    
+
     try {
       // Validate email format
       if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -99,7 +99,7 @@ const EditTeacher = () => {
       setTimeout(() => navigate('/teachers'), 1200);
     } catch (e) {
       console.error('Teacher update error:', e);
-      
+
       // Handle specific error cases
       if (e.response?.data?.non_field_errors) {
         setError(e.response.data.non_field_errors.join(', '));
@@ -125,7 +125,7 @@ const EditTeacher = () => {
 
   return (
     <div className="edit-teacher-page">
-      <div className="page-header py-4 mb-4" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '0 0 2rem 2rem' }}>
+      <div className="page-header py-4 mb-4" style={{ background: '#1A6E48', borderRadius: '0 0 2rem 2rem' }}>
         <Container>
           <Row className="align-items-center">
             <Col md={8}>
@@ -133,34 +133,9 @@ const EditTeacher = () => {
               <p className="text-white opacity-75 mb-0">Update teacher details</p>
             </Col>
             <Col md={4} className="text-end">
-              <Button variant="outline-light" onClick={() => navigate('/teachers')}>Back to Teachers</Button>
-              <Button 
-                variant="outline-info" 
-                size="sm"
-                onClick={async () => {
-                  try {
-                    console.log('Testing teacher update with minimal data...');
-                    const testPayload = {
-                      name: formData.name,
-                      email: formData.email,
-                      designation: formData.designation,
-                      qualification: formData.qualification,
-                      is_active: formData.is_active
-                    };
-                    console.log('Test payload:', testPayload);
-                    const response = await teachersAPI.update(teacherId, testPayload);
-                    console.log('Test update successful:', response);
-                    alert('Test update successful! Check the console for details.');
-                  } catch (error) {
-                    console.error('Test update failed:', error);
-                    alert('Test update failed: ' + error.message);
-                  }
-                }}
-                className="ms-2"
-                title="Test update with minimal data"
-              >
-                <i className="fas fa-vial me-1"></i>
-                Test Update
+              <Button variant="outline-light" onClick={() => navigate('/teachers')}>
+                <i className="fas fa-arrow-left me-2"></i>
+                <span className="back-btn-text">Back to Teachers</span>
               </Button>
             </Col>
           </Row>
@@ -174,30 +149,8 @@ const EditTeacher = () => {
               <Card.Body className="p-4">
                 {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
                 {success && <Alert variant="success" onClose={() => setSuccess(false)} dismissible>Teacher updated successfully!</Alert>}
-                
-                {/* Debug Info */}
-                <Alert variant="info" className="mb-3">
-                  <i className="fas fa-info-circle me-2"></i>
-                  <strong>Debug Info:</strong> 
-                  <div className="mt-2">
-                    <small>
-                      <strong>Current Email:</strong> {formData.email}<br/>
-                      <strong>Form Data:</strong> {JSON.stringify(formData, null, 2)}
-                    </small>
-                  </div>
-                  <Button 
-                    variant="outline-secondary" 
-                    size="sm" 
-                    className="mt-2"
-                    onClick={() => {
-                      console.log('Current form data:', formData);
-                      console.log('Teacher ID:', teacherId);
-                    }}
-                  >
-                    <i className="fas fa-bug me-1"></i>
-                    Log to Console
-                  </Button>
-                </Alert>
+
+                {/* Debug info removed for production UI */}
 
                 <Form onSubmit={handleSubmit}>
                   <Row>
@@ -242,7 +195,7 @@ const EditTeacher = () => {
                           {formData.subject_specialists.map((subject, index) => (
                             <div key={index} className="d-flex align-items-center mb-2">
                               <Form.Control
-                                value={subject} 
+                                value={subject}
                                 onChange={(e) => {
                                   const newSpecialists = [...formData.subject_specialists];
                                   newSpecialists[index] = e.target.value;
@@ -255,8 +208,8 @@ const EditTeacher = () => {
                                 className="me-2"
                                 placeholder="Enter subject name"
                               />
-                              <Button 
-                                variant="outline-danger" 
+                              <Button
+                                variant="outline-danger"
                                 size="sm"
                                 onClick={() => {
                                   const newSpecialists = formData.subject_specialists.filter((_, i) => i !== index);
@@ -271,8 +224,8 @@ const EditTeacher = () => {
                               </Button>
                             </div>
                           ))}
-                          <Button 
-                            variant="outline-primary" 
+                          <Button
+                            variant="outline-primary"
                             size="sm"
                             onClick={() => {
                               setFormData(prev => ({

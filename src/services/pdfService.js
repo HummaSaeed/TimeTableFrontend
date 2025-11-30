@@ -43,23 +43,25 @@ const addFooter = (doc) => {
 
 export const pdfService = {
   // Generate PDF for a specific class timetable
-  generateClassTimetablePDF: async (classData, timetableSlots) => {
+  generateClassTimetablePDF: async (classData, timetableSlots, schoolProfile = null) => {
     try {
       const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
 
       // Header
       doc.setFontSize(16);
-      doc.text(`${classData?.class_name || ''}${classData?.section ? '-' + classData.section : ''} Timetable`, 40, 40);
+      doc.text(`${classData?.class_name || 'Class'}${classData?.section ? '-' + classData.section : ''} Timetable`, 40, 40);
       doc.setFontSize(11);
       doc.setTextColor(80);
       doc.text(`Room: ${classData?.room_number || '-'}`, 40, 60);
       doc.text(`Strength: ${classData?.total_strength || '-'}`, 200, 60);
 
       const slots = Array.isArray(timetableSlots) ? timetableSlots : [];
-      const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a,b) => (dayOrder[a]||999)-(dayOrder[b]||999));
-      const days = uniqueDays.length ? uniqueDays : ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-      const maxPeriod = Math.max(0, ...slots.map(s => Number(s.period_number)||0)) || 8;
-      const periodNumbers = Array.from({length: maxPeriod}, (_,i) => i+1);
+      const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999));
+      const days = uniqueDays.length ? uniqueDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+      // Use school profile total periods if available, otherwise calculate from slots
+      const totalPeriods = schoolProfile?.total_periods_per_day || Math.max(8, ...slots.map(s => Number(s.period_number) || 0));
+      const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
 
       const head = [['Day', ...periodNumbers.map(p => `Period ${p}`)]];
       const body = days.map(d => {
@@ -75,7 +77,7 @@ export const pdfService = {
         startY: 85,
         head,
         body,
-        styles: { fontSize: 10, cellPadding: 6, lineColor: [200,200,200], lineWidth: 0.5 },
+        styles: { fontSize: 10, cellPadding: 6, lineColor: [200, 200, 200], lineWidth: 0.5 },
         headStyles: { fillColor: [33, 37, 41], textColor: 255 },
         theme: 'grid',
       });
@@ -85,7 +87,7 @@ export const pdfService = {
 
       return {
         success: true,
-        filename: `${(classData?.class_name || 'Class')}_${classData?.section || ''}_Timetable.pdf`,
+        filename: `${(classData?.class_name || 'Class').replace(/\s+/g, '_')}${classData?.section ? '_' + classData.section : ''}_Timetable.pdf`,
         data: blob
       };
     } catch (error) {
@@ -95,7 +97,7 @@ export const pdfService = {
   },
 
   // Generate PDF for a specific teacher timetable
-  generateTeacherTimetablePDF: async (teacherData, timetableSlots) => {
+  generateTeacherTimetablePDF: async (teacherData, timetableSlots, schoolProfile = null) => {
     try {
       const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
 
@@ -107,10 +109,12 @@ export const pdfService = {
       doc.text(`Subject: ${teacherData?.subject_specialist || '-'}`, 260, 60);
 
       const slots = Array.isArray(timetableSlots) ? timetableSlots : [];
-      const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a,b) => (dayOrder[a]||999)-(dayOrder[b]||999));
-      const days = uniqueDays.length ? uniqueDays : ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-      const maxPeriod = Math.max(0, ...slots.map(s => Number(s.period_number)||0)) || 8;
-      const periodNumbers = Array.from({length: maxPeriod}, (_,i) => i+1);
+      const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999));
+      const days = uniqueDays.length ? uniqueDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+      // Use school profile total periods if available, otherwise calculate from slots
+      const totalPeriods = schoolProfile?.total_periods_per_day || Math.max(8, ...slots.map(s => Number(s.period_number) || 0));
+      const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
 
       const head = [['Day', ...periodNumbers.map(p => `Period ${p}`)]];
       const body = days.map(d => {
@@ -126,7 +130,7 @@ export const pdfService = {
         startY: 85,
         head,
         body,
-        styles: { fontSize: 10, cellPadding: 6, lineColor: [200,200,200], lineWidth: 0.5 },
+        styles: { fontSize: 10, cellPadding: 6, lineColor: [200, 200, 200], lineWidth: 0.5 },
         headStyles: { fillColor: [33, 37, 41], textColor: 255 },
         theme: 'grid',
       });
@@ -145,8 +149,140 @@ export const pdfService = {
     }
   },
 
+  // Generate consolidated class timetable grid (all classes on 1-2 pages)
+  generateConsolidatedClassesPDF: async (classes, timetableSlots, schoolProfile = null) => {
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+
+      doc.setFontSize(18);
+      doc.text('Complete School Timetable - All Classes', 40, 40);
+      doc.setFontSize(11);
+      doc.setTextColor(80);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 60);
+
+      const totalPeriods = schoolProfile?.total_periods_per_day || 8;
+      const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
+
+      // Build table data
+      const head = [['Class', ...periodNumbers.map(p => `P${p}`)]];
+      const body = (classes || []).map(cls => {
+        const row = [`${cls.class_name}-${cls.section}`];
+        periodNumbers.forEach(periodNum => {
+          const slot = (timetableSlots || []).find(
+            s => s.class_name === cls.class_name &&
+              s.class_section === cls.section &&
+              s.period_number === periodNum
+          );
+          row.push(slot ? `${slot.subject_name || ''}\\n${slot.teacher_name || ''}` : '-');
+        });
+        return row;
+      });
+
+      autoTable(doc, {
+        startY: 85,
+        head,
+        body,
+        styles: {
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.5,
+          halign: 'center',
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [26, 110, 72],
+          textColor: 255,
+          fontSize: 9,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [248, 249, 250] }
+        },
+        theme: 'grid',
+      });
+
+      addFooter(doc);
+      const blob = saveToBlob(doc);
+
+      return {
+        success: true,
+        filename: `School_Timetable_All_Classes_${new Date().toISOString().split('T')[0]}.pdf`,
+        data: blob
+      };
+    } catch (error) {
+      console.error('Error generating consolidated classes PDF:', error);
+      throw new Error('Failed to generate PDF');
+    }
+  },
+
+  // Generate consolidated teacher timetable grid (all teachers on 1-2 pages)
+  generateConsolidatedTeachersPDF: async (teachers, timetableSlots, schoolProfile = null) => {
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+
+      doc.setFontSize(18);
+      doc.text('Complete School Timetable - All Teachers', 40, 40);
+      doc.setFontSize(11);
+      doc.setTextColor(80);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 60);
+
+      const totalPeriods = schoolProfile?.total_periods_per_day || 8;
+      const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
+
+      // Build table data
+      const head = [['Teacher', ...periodNumbers.map(p => `P${p}`)]];
+      const body = (teachers || []).map(teacher => {
+        const row = [teacher.name];
+        periodNumbers.forEach(periodNum => {
+          const slot = (timetableSlots || []).find(
+            s => s.teacher_name === teacher.name && s.period_number === periodNum
+          );
+          row.push(slot ? `${slot.class_name}-${slot.class_section}\\n${slot.subject_name || ''}` : '-');
+        });
+        return row;
+      });
+
+      autoTable(doc, {
+        startY: 85,
+        head,
+        body,
+        styles: {
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.5,
+          halign: 'center',
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [26, 110, 72],
+          textColor: 255,
+          fontSize: 9,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: [248, 249, 250] }
+        },
+        theme: 'grid',
+      });
+
+      addFooter(doc);
+      const blob = saveToBlob(doc);
+
+      return {
+        success: true,
+        filename: `School_Timetable_All_Teachers_${new Date().toISOString().split('T')[0]}.pdf`,
+        data: blob
+      };
+    } catch (error) {
+      console.error('Error generating consolidated teachers PDF:', error);
+      throw new Error('Failed to generate PDF');
+    }
+  },
+
   // Generate comprehensive PDF with all timetables
-  generateAllTimetablesPDF: async (classes, teachers, timetableSlots) => {
+  generateAllTimetablesPDF: async (classes, teachers, timetableSlots, schoolProfile = null) => {
     try {
       const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
 
@@ -162,7 +298,7 @@ export const pdfService = {
       const totalSlots = (timetableSlots || []).length;
       autoTable(doc, {
         startY: 90,
-        head: [[ 'Metric', 'Value' ]],
+        head: [['Metric', 'Value']],
         body: [
           ['Total Classes', String(totalClasses)],
           ['Total Teachers', String(totalTeachers)],
@@ -180,10 +316,13 @@ export const pdfService = {
         doc.text(`${cls.class_name || 'Class'}${cls.section ? '-' + cls.section : ''} Timetable`, 40, 40);
 
         const slots = (timetableSlots || []).filter(s => s.class_name === cls.class_name && s.class_section === cls.section);
-        const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a,b) => (dayOrder[a]||999)-(dayOrder[b]||999));
-        const days = uniqueDays.length ? uniqueDays : ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-        const maxPeriod = Math.max(0, ...slots.map(s => Number(s.period_number)||0)) || 8;
-        const periodNumbers = Array.from({length: maxPeriod}, (_,i) => i+1);
+        const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999));
+        const days = uniqueDays.length ? uniqueDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+        // Use school profile total periods if available
+        const totalPeriods = schoolProfile?.total_periods_per_day || Math.max(8, ...slots.map(s => Number(s.period_number) || 0));
+        const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
+
         const head = [['Day', ...periodNumbers.map(p => `Period ${p}`)]];
         const body = days.map(d => {
           const row = [d];
@@ -198,7 +337,7 @@ export const pdfService = {
           startY: 70,
           head,
           body,
-          styles: { fontSize: 10, cellPadding: 6, lineColor: [200,200,200], lineWidth: 0.5 },
+          styles: { fontSize: 10, cellPadding: 6, lineColor: [200, 200, 200], lineWidth: 0.5 },
           headStyles: { fillColor: [33, 37, 41], textColor: 255 },
           theme: 'grid',
         });
@@ -212,10 +351,13 @@ export const pdfService = {
         doc.text(`${t.name || 'Teacher'} Timetable`, 40, 40);
 
         const slots = (timetableSlots || []).filter(s => s.teacher_name === t.name);
-        const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a,b) => (dayOrder[a]||999)-(dayOrder[b]||999));
-        const days = uniqueDays.length ? uniqueDays : ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-        const maxPeriod = Math.max(0, ...slots.map(s => Number(s.period_number)||0)) || 8;
-        const periodNumbers = Array.from({length: maxPeriod}, (_,i) => i+1);
+        const uniqueDays = Array.from(new Set(slots.map(s => s.day))).sort((a, b) => (dayOrder[a] || 999) - (dayOrder[b] || 999));
+        const days = uniqueDays.length ? uniqueDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+        // Use school profile total periods if available
+        const totalPeriods = schoolProfile?.total_periods_per_day || Math.max(8, ...slots.map(s => Number(s.period_number) || 0));
+        const periodNumbers = Array.from({ length: totalPeriods }, (_, i) => i + 1);
+
         const head = [['Day', ...periodNumbers.map(p => `Period ${p}`)]];
         const body = days.map(d => {
           const row = [d];
@@ -230,7 +372,7 @@ export const pdfService = {
           startY: 70,
           head,
           body,
-          styles: { fontSize: 10, cellPadding: 6, lineColor: [200,200,200], lineWidth: 0.5 },
+          styles: { fontSize: 10, cellPadding: 6, lineColor: [200, 200, 200], lineWidth: 0.5 },
           headStyles: { fillColor: [33, 37, 41], textColor: 255 },
           theme: 'grid',
         });
@@ -273,12 +415,12 @@ export const pdfService = {
   printTimetable: (timetableData) => {
     try {
       console.log('Printing timetable:', timetableData);
-      
+
       // In a real implementation, this would:
       // 1. Create a print-friendly version of the timetable
       // 2. Open print dialog
       // 3. Handle print formatting
-      
+
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <html>
@@ -312,6 +454,157 @@ export const pdfService = {
       console.error('Error printing timetable:', error);
       throw new Error('Failed to print timetable');
     }
+  },
+
+  // Generate Substitution Grid PDF
+  generateSubstitutionGridPDF: async (gridData, periods, date, dayName, statistics) => {
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt' });
+
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(220, 53, 69); // Red color
+      doc.text('Substitution Grid', 40, 35);
+
+      // Date and day info
+      doc.setFontSize(12);
+      doc.setTextColor(80);
+      doc.text(`Date: ${new Date(date).toLocaleDateString()} (${dayName})`, 40, 55);
+      doc.text(`Total Absent Teachers: ${gridData.length}`, 40, 70);
+
+      // Statistics
+      if (statistics) {
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Total Periods: ${statistics.total_periods_to_substitute} | `, 40, 85);
+        doc.setTextColor(40, 167, 69); // Green
+        doc.text(`Covered: ${statistics.substituted_periods}`, 180, 85);
+        doc.setTextColor(220, 53, 69); // Red
+        doc.text(` | Pending: ${statistics.unsubstituted_periods}`, 260, 85);
+      }
+
+      // Prepare table data
+      const headers = ['Teacher (Absent)', ...periods.map(p => `P${p}`)];
+      const tableData = [];
+
+      gridData.forEach(row => {
+        const rowData = [row.teacher_name + (row.reason ? `\n(${row.reason})` : '')];
+
+        periods.forEach(period => {
+          const periodData = row.periods[period];
+
+          if (periodData && periodData.has_class) {
+            const cellLines = [
+              `📚 ${periodData.class_name}`,
+              `📖 ${periodData.subject_name}`
+            ];
+
+            if (periodData.room_number) {
+              cellLines.push(`🚪 ${periodData.room_number}`);
+            }
+
+            if (periodData.period_start_time && periodData.period_end_time) {
+              cellLines.push(`⏰ ${periodData.period_start_time}-${periodData.period_end_time}`);
+            }
+
+            if (periodData.substitute_teacher) {
+              cellLines.push(`→ ${periodData.substitute_teacher}`);
+            } else {
+              cellLines.push('⚠️ NO SUBSTITUTE');
+            }
+
+            rowData.push(cellLines.join('\n'));
+          } else {
+            rowData.push('Free');
+          }
+        });
+
+        tableData.push(rowData);
+      });
+
+      // Generate table
+      autoTable(doc, {
+        startY: 100,
+        head: [headers],
+        body: tableData,
+        styles: {
+          fontSize: 8,
+          cellPadding: 5,
+          overflow: 'linebreak',
+          cellWidth: 'wrap',
+          valign: 'top'
+        },
+        headStyles: {
+          fillColor: [220, 53, 69],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          0: {
+            cellWidth: 100,
+            fontStyle: 'bold',
+            fillColor: [245, 245, 245]
+          }
+        },
+        alternateRowStyles: {
+          fillColor: [250, 250, 250]
+        },
+        didParseCell: function (data) {
+          // Highlight cells with no substitute
+          if (data.cell.text && data.cell.text.length > 0) {
+            const cellText = data.cell.text.join(' ');
+            if (cellText.includes('NO SUBSTITUTE')) {
+              data.cell.styles.fillColor = [255, 230, 230];
+              data.cell.styles.textColor = [220, 53, 69];
+            } else if (cellText.includes('→') && data.column.index > 0) {
+              // Has substitute - light green background
+              data.cell.styles.fillColor = [230, 255, 230];
+            } else if (cellText === 'Free') {
+              data.cell.styles.fillColor = [240, 240, 240];
+              data.cell.styles.textColor = [150, 150, 150];
+              data.cell.styles.fontStyle = 'italic';
+              data.cell.styles.halign = 'center';
+            }
+          }
+        }
+      });
+
+      // Add legend at the bottom
+      const finalY = doc.lastAutoTable.finalY + 15;
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.text('Legend:', 40, finalY);
+
+      // Green box
+      doc.setFillColor(230, 255, 230);
+      doc.rect(90, finalY - 8, 15, 10, 'F');
+      doc.text('Covered', 110, finalY);
+
+      // Red box
+      doc.setFillColor(255, 230, 230);
+      doc.rect(165, finalY - 8, 15, 10, 'F');
+      doc.text('No Substitute', 185, finalY);
+
+      // Gray box
+      doc.setFillColor(240, 240, 240);
+      doc.rect(265, finalY - 8, 15, 10, 'F');
+      doc.text('Free Period', 285, finalY);
+
+      // Add footer
+      addFooter(doc);
+
+      const blob = saveToBlob(doc);
+
+      return {
+        success: true,
+        filename: `Substitution_Grid_${date}.pdf`,
+        data: blob
+      };
+    } catch (error) {
+      console.error('Error generating substitution grid PDF:', error);
+      throw new Error('Failed to generate substitution grid PDF');
+    }
   }
 };
 
@@ -336,24 +629,24 @@ export const formatTimetableForPDF = (slots, type = 'class') => {
 // Helper function to create timetable grid for PDF
 export const createTimetableGrid = (slots, days, timeSlots) => {
   const grid = [];
-  
+
   timeSlots.forEach(timeSlot => {
     const [startTime] = timeSlot.split('-');
     const row = {
       time: timeSlot,
       slots: {}
     };
-    
+
     days.forEach(day => {
-      const slot = slots.find(s => 
+      const slot = slots.find(s =>
         s.day === day && s.start_time === startTime
       );
       row.slots[day] = slot || null;
     });
-    
+
     grid.push(row);
   });
-  
+
   return grid;
 };
 
