@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Row, Col, Card, Button, Badge,
-  Alert, Spinner, Tabs, Tab, Table, Dropdown, Container
+  Alert, Spinner, Tabs, Tab, Table, Dropdown, Container, Modal, Form
 } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { timetableAPI, classesAPI, schoolProfileAPI } from '../../services/api';
@@ -14,17 +14,21 @@ const ClassTimetable = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [classData, setClassData] = useState(null);
   const [timetableSlots, setTimetableSlots] = useState([]);
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [selectedView, setSelectedView] = useState('grid'); // grid or list
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const timeSlots = [
-    '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00',
-    '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00'
-  ];
+  // Edit/Delete state
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingSlotId, setDeletingSlotId] = useState(null);
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const periods = [1, 2, 3, 4, 5, 6, 7, 8]; // Period numbers
 
 
   useEffect(() => {
@@ -45,12 +49,19 @@ const ClassTimetable = () => {
 
       setClassData(classResponse.data);
       setSchoolProfile(profileResponse.data);
-      const classSlots = (slotsResponse.data.results || slotsResponse.data)
-        .filter(slot => slot.class_name === classResponse.data.class_name);
+
+      // Load class timetable using specific endpoint
+      console.log('Fetching timetable for class ID:', classId);
+      const timetableResponse = await timetableAPI.getByClass(classId);
+      console.log('Timetable API Response:', timetableResponse);
+
+      const classSlots = timetableResponse.data.results || timetableResponse.data || [];
+      console.log('Loaded class slots:', classSlots);
+
       setTimetableSlots(classSlots);
-    } catch (error) {
-      setError('Failed to fetch class timetable data');
-      console.error('Error fetching data:', error);
+    } catch (err) {
+      console.error('Error fetching class data:', err);
+      setError('Failed to load class data');
     } finally {
       setLoading(false);
     }
@@ -65,10 +76,47 @@ const ClassTimetable = () => {
     }
   };
 
-  const getSlotForTimeAndDay = (timeSlot, day) => {
-    const [startTime] = timeSlot.split('-');
+  const handleEditSlot = (slot) => {
+    setEditingSlot(slot);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateSlot = async (updatedSlot) => {
+    try {
+      await timetableAPI.update(updatedSlot.id, updatedSlot);
+      setSuccess('Slot updated successfully!');
+      setShowEditModal(false);
+      setEditingSlot(null);
+      fetchClassData(); // Refresh data
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      setError('Failed to update slot');
+      console.error('Error updating slot:', error);
+    }
+  };
+
+  const handleDeleteSlot = (slotId) => {
+    setDeletingSlotId(slotId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await timetableAPI.delete(deletingSlotId);
+      setSuccess('Slot deleted successfully!');
+      setShowDeleteDialog(false);
+      setDeletingSlotId(null);
+      fetchClassData(); // Refresh data
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      setError('Failed to delete slot');
+      console.error('Error deleting slot:', error);
+    }
+  };
+
+  const getSlotForPeriodAndDay = (period, day) => {
     return timetableSlots.find(slot =>
-      slot.day === day && slot.start_time === startTime
+      slot.day === day && slot.period_number === period
     );
   };
 
@@ -78,31 +126,94 @@ const ClassTimetable = () => {
         <Table responsive className="table-bordered">
           <thead className="table-dark">
             <tr>
-              <th style={{ width: '120px' }}>Time</th>
+              <th style={{ width: '100px' }}>Period</th>
               {days.map(day => (
                 <th key={day} className="text-center">{day}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {timeSlots.map(timeSlot => (
-              <tr key={timeSlot}>
+            {periods.map(period => (
+              <tr key={period}>
                 <td className="fw-bold text-center" style={{ backgroundColor: '#f8f9fa' }}>
-                  {timeSlot}
+                  Period {period}
                 </td>
                 {days.map(day => {
-                  const slot = getSlotForTimeAndDay(timeSlot, day);
+                  const slot = getSlotForPeriodAndDay(period, day);
                   return (
-                    <td key={`${day}-${timeSlot}`} className="text-center p-2">
+                    <td key={`${day}-${period}`} className="text-center p-2">
                       {slot ? (
-                        <div className="timetable-slot p-2 rounded"
+                        <div
+                          className="timetable-slot p-2 rounded position-relative"
                           style={{
                             backgroundColor: slot.is_active ? '#d4edda' : '#f8d7da',
-                            border: '1px solid #c3e6cb'
-                          }}>
-                          <div className="fw-bold small">{slot.subject_name}</div>
-                          <div className="text-muted small">{slot.teacher_name}</div>
-                          <div className="text-muted small">{slot.room_number}</div>
+                            border: '1px solid #c3e6cb',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                            e.currentTarget.querySelector('.slot-actions').style.opacity = '1';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.boxShadow = 'none';
+                            e.currentTarget.querySelector('.slot-actions').style.opacity = '0';
+                          }}
+                        >
+                          <div className="fw-bold small">{slot.subject}</div>
+                          <div className="text-muted small">{slot.teacher}</div>
+                          {slot.room && <div className="text-muted small">Room: {slot.room}</div>}
+
+                          {/* Action Buttons */}
+                          <div
+                            className="slot-actions"
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              display: 'flex',
+                              gap: '4px',
+                              opacity: '0',
+                              transition: 'opacity 0.2s'
+                            }}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditSlot(slot);
+                              }}
+                              style={{
+                                background: '#1a73e8',
+                                border: 'none',
+                                borderRadius: '4px',
+                                color: 'white',
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                cursor: 'pointer'
+                              }}
+                              title="Edit slot"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSlot(slot.id);
+                              }}
+                              style={{
+                                background: '#dc3545',
+                                border: 'none',
+                                borderRadius: '4px',
+                                color: 'white',
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                cursor: 'pointer'
+                              }}
+                              title="Delete slot"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="text-muted small">-</div>
@@ -471,6 +582,14 @@ const ClassTimetable = () => {
           </Alert>
         )}
 
+        {/* Success Alert */}
+        {success && (
+          <Alert variant="success" onClose={() => setSuccess(null)} dismissible>
+            <i className="fas fa-check-circle me-2"></i>
+            {success}
+          </Alert>
+        )}
+
         {/* Timetable View */}
         <Card style={{
           background: '#FFFFFF',
@@ -544,6 +663,88 @@ const ClassTimetable = () => {
             )}
           </Card.Body>
         </Card>
+
+        {/* Edit Slot Modal */}
+        {editingSlot && (
+          <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+            <Modal.Header closeButton style={{ borderBottom: 'none', padding: '24px 24px 16px 24px' }}>
+              <Modal.Title style={{ fontSize: '24px', fontWeight: '400', color: '#202124' }}>
+                Edit Timetable Slot
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ padding: '0 24px 24px 24px' }}>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#e8f5e9', borderRadius: '8px' }}>
+                <strong>Current:</strong> {editingSlot.day}, Period {editingSlot.period_number} - {editingSlot.subject_name}
+              </div>
+              <p style={{ color: '#5f6368', fontSize: '14px' }}>
+                Note: Editing functionality will be fully implemented in the next update. For now, please delete and recreate the slot.
+              </p>
+            </Modal.Body>
+            <Modal.Footer style={{ borderTop: 'none', padding: '16px 24px 24px 24px' }}>
+              <Button variant="link" onClick={() => setShowEditModal(false)} style={{ color: '#1a73e8' }}>
+                Close
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <Modal show={showDeleteDialog} onHide={() => setShowDeleteDialog(false)} centered>
+          <Modal.Header closeButton style={{ borderBottom: 'none', padding: '24px 24px 16px 24px' }}>
+            <Modal.Title style={{ fontSize: '20px', fontWeight: '500', color: '#202124' }}>
+              Delete Timetable Slot?
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ padding: '0 24px 24px 24px' }}>
+            {deletingSlotId && (
+              <>
+                <p style={{ color: '#5f6368', marginBottom: '16px' }}>
+                  Are you sure you want to delete this slot? This action cannot be undone.
+                </p>
+                <div style={{
+                  padding: '16px',
+                  backgroundColor: '#fff3cd',
+                  borderRadius: '8px',
+                  border: '1px solid #ffc107'
+                }}>
+                  {(() => {
+                    const slot = timetableSlots.find(s => s.id === deletingSlotId);
+                    return slot ? (
+                      <>
+                        <div><strong>Day:</strong> {slot.day}</div>
+                        <div><strong>Period:</strong> {slot.period_number}</div>
+                        <div><strong>Subject:</strong> {slot.subject}</div>
+                        <div><strong>Teacher:</strong> {slot.teacher}</div>
+                        {slot.room && <div><strong>Room:</strong> {slot.room}</div>}
+                      </>
+                    ) : null;
+                  })()}
+                </div>
+              </>
+            )}
+          </Modal.Body>
+          <Modal.Footer style={{ borderTop: 'none', padding: '16px 24px 24px 24px', gap: '12px' }}>
+            <Button
+              variant="link"
+              onClick={() => setShowDeleteDialog(false)}
+              style={{ color: '#1a73e8', textDecoration: 'none' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              style={{
+                backgroundColor: '#dc3545',
+                border: 'none',
+                fontWeight: '500',
+                padding: '10px 24px',
+                borderRadius: '8px'
+              }}
+            >
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );

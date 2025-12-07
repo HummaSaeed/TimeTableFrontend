@@ -1491,3 +1491,21 @@ body.auth-page {
   font-size: 0.875rem;
   font-weight: 600;
 }
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(26, 110, 72, 0.2);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(26, 110, 72, 0.5);
+}

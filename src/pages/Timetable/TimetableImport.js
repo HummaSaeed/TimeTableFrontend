@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, Row, Col, Card, Form, Button, Alert, 
-  Table, Badge, Spinner, Modal 
+import {
+  Container, Row, Col, Card, Form, Button, Alert,
+  Table, Badge, Spinner, Modal
 } from 'react-bootstrap';
 import { timetableAPI, teachersAPI, classesAPI, subjectsAPI, schoolProfileAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,7 @@ const TimetableImport = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    day: '',
+    selectedDays: [],
     period: '',
     class_name: '',
     section: '',
@@ -53,7 +53,7 @@ const TimetableImport = () => {
         setLoadingData(false);
       }
     };
-    
+
     loadAllData();
   }, []);
 
@@ -76,11 +76,27 @@ const TimetableImport = () => {
     }));
   };
 
+  const handleDayToggle = (day) => {
+    setFormData(prev => {
+      const selectedDays = prev.selectedDays.includes(day)
+        ? prev.selectedDays.filter(d => d !== day)
+        : [...prev.selectedDays, day];
+      return { ...prev, selectedDays };
+    });
+  };
+
+  const handleSelectAllDays = () => {
+    setFormData(prev => {
+      const allSelected = prev.selectedDays.length === days.length;
+      return { ...prev, selectedDays: allSelected ? [] : [...days] };
+    });
+  };
+
   const loadTeachers = async () => {
     try {
       const response = await teachersAPI.getAll();
       console.log('Teachers API response:', response);
-      
+
       let teachersData = [];
       if (response?.data) {
         if (Array.isArray(response.data)) {
@@ -91,7 +107,7 @@ const TimetableImport = () => {
           teachersData = response.data.data;
         }
       }
-      
+
       console.log('Processed teachers data:', teachersData);
       setTeachers(teachersData);
     } catch (error) {
@@ -104,7 +120,7 @@ const TimetableImport = () => {
     try {
       const response = await classesAPI.getAll();
       console.log('Classes API response:', response);
-      
+
       let classesData = [];
       if (response?.data) {
         if (Array.isArray(response.data)) {
@@ -115,7 +131,7 @@ const TimetableImport = () => {
           classesData = response.data.data;
         }
       }
-      
+
       console.log('Processed classes data:', classesData);
       setClasses(classesData);
     } catch (error) {
@@ -128,7 +144,7 @@ const TimetableImport = () => {
     try {
       const response = await subjectsAPI.getAll();
       console.log('Subjects API response:', response);
-      
+
       let subjectsData = [];
       if (response?.data) {
         if (Array.isArray(response.data)) {
@@ -139,7 +155,7 @@ const TimetableImport = () => {
           subjectsData = response.data.data;
         }
       }
-      
+
       console.log('Processed subjects data:', subjectsData);
       setSubjects(subjectsData);
     } catch (error) {
@@ -150,19 +166,25 @@ const TimetableImport = () => {
 
   const addTimetableSlot = () => {
     console.log('Adding timetable slot with data:', formData);
-    
-    if (!formData.day || !formData.period || !formData.class_name || 
-        !formData.section || !formData.subject || !formData.teacher) {
+
+    if (!formData.selectedDays || formData.selectedDays.length === 0) {
+      setError('Please select at least one day');
+      console.error('Validation failed - no days selected');
+      return;
+    }
+
+    if (!formData.period || !formData.class_name ||
+      !formData.section || !formData.subject || !formData.teacher) {
       setError('Please fill in all required fields');
       console.error('Validation failed - missing required fields');
       return;
     }
 
     // Validate that the class, subject, and teacher exist in the system
-    const classObj = classes.find(cls => 
+    const classObj = classes.find(cls =>
       cls.class_name === formData.class_name && cls.section === formData.section
     );
-    
+
     if (!classObj) {
       setError(`Class ${formData.class_name}-${formData.section} not found in the system. Please add this class first.`);
       return;
@@ -180,20 +202,26 @@ const TimetableImport = () => {
       return;
     }
 
-    // Add class_obj (class ID) to the slot for backend compatibility
-    const newSlot = { ...formData, id: Date.now(), class_obj: classObj.id };
-    console.log('Created new slot:', newSlot);
+    // Create one slot for each selected day
+    const newSlots = formData.selectedDays.map(day => ({
+      ...formData,
+      day: day,
+      id: Date.now() + Math.random(), // Unique ID for each slot
+      class_obj: classObj.id
+    }));
+
+    console.log('Created new slots:', newSlots);
     console.log('Validated objects:', { classObj, subjectObj, teacherObj });
 
     setTimetableSlots(prev => {
-      const updated = [...prev, newSlot];
+      const updated = [...prev, ...newSlots];
       console.log('Updated timetable slots:', updated);
       return updated;
     });
-    
+
     // Reset form
     setFormData({
-      day: '',
+      selectedDays: [],
       period: '',
       class_name: '',
       section: '',
@@ -204,11 +232,11 @@ const TimetableImport = () => {
       end_time: '',
       notes: ''
     });
-    
+
     setShowAddSlot(false);
     setError(null);
-    setSuccess('Slot added successfully!');
-    
+    setSuccess(`${newSlots.length} slot(s) added successfully!`);
+
     // Auto-hide success message after 2 seconds
     setTimeout(() => setSuccess(false), 2000);
   };
@@ -231,11 +259,11 @@ const TimetableImport = () => {
       console.log('Slots to save:', timetableSlots);
 
       const slots = timetableSlots.map(slot => {
-  
-        const classObj = classes.find(cls => 
+
+        const classObj = classes.find(cls =>
           cls.class_name === slot.class_name && cls.section === slot.section
         );
-        
+
         if (!classObj) {
           throw new Error(`Class ${slot.class_name}-${slot.section} not found in the system`);
         }
@@ -280,7 +308,7 @@ const TimetableImport = () => {
           console.error('Full error response:', slotError.response);
           console.error('Error response data:', slotError.response?.data);
           console.error('Error response status:', slotError.response?.status);
-          
+
           // Try to get more detailed error information
           let errorMessage = slotError.message;
           if (slotError.response?.data) {
@@ -296,17 +324,17 @@ const TimetableImport = () => {
               errorMessage = JSON.stringify(slotError.response.data);
             }
           }
-          
+
           throw new Error(`Failed to create slot for ${slot.class_name}-${slot.class_section} on ${slot.day} Period ${slot.period_number}: ${errorMessage}`);
         }
       }
 
       console.log('All slots created successfully:', createdSlots);
       setSuccess(`Successfully saved ${createdSlots.length} timetable slots!`);
-      
+
       // Clear the local slots after successful save
       setTimetableSlots([]);
-      
+
       setTimeout(() => {
         navigate('/timetable');
       }, 2000);
@@ -321,7 +349,7 @@ const TimetableImport = () => {
 
   const resetForm = () => {
     setFormData({
-      day: '',
+      selectedDays: [],
       period: '',
       class_name: '',
       section: '',
@@ -349,9 +377,9 @@ const TimetableImport = () => {
   return (
     <div className="timetable-import-page">
       {/* Header Section */}
-      <div className="page-header py-4 mb-4" style={{ 
-        background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)', 
-        borderRadius: '0 0 2rem 2rem' 
+      <div className="page-header py-4 mb-4" style={{
+        background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)',
+        borderRadius: '0 0 2rem 2rem'
       }}>
         <Container>
           <Row className="align-items-center">
@@ -360,16 +388,16 @@ const TimetableImport = () => {
               <p className="text-white opacity-75 mb-0">Build your timetable by adding slots manually</p>
             </Col>
             <Col md={4} className="text-end">
-              <Button 
-                variant="outline-light" 
+              <Button
+                variant="outline-light"
                 onClick={() => navigate('/timetable')}
                 className="me-2"
               >
                 <i className="fas fa-arrow-left me-2"></i>
                 Back to Timetable
               </Button>
-              <Button 
-                variant="outline-info" 
+              <Button
+                variant="outline-info"
                 onClick={async () => {
                   try {
                     console.log('Testing API connection...');
@@ -386,22 +414,22 @@ const TimetableImport = () => {
                 <i className="fas fa-wifi me-2"></i>
                 Test API
               </Button>
-              <Button 
-                variant="outline-warning" 
+              <Button
+                variant="outline-warning"
                 onClick={async () => {
                   try {
                     console.log('Testing single slot creation...');
-                    
+
                     // Find actual class, subject, and teacher IDs for testing
                     const testClass = classes.find(cls => cls.class_name === '1' && cls.section === 'A');
                     const testSubject = subjects.find(sub => sub.name === 'English');
                     const testTeacher = teachers.find(tea => tea.name === 'Humma Saeed');
-                    
+
                     if (!testClass || !testSubject || !testTeacher) {
                       alert('Please ensure you have at least one class (1-A), subject (English), and teacher (Humma Saeed) in the system');
                       return;
                     }
-                    
+
                     const testSlot = {
                       day: 'Monday',
                       period_number: 1,
@@ -436,7 +464,7 @@ const TimetableImport = () => {
         {/* Help Note */}
         <Alert variant="info" className="mb-4">
           <i className="fas fa-info-circle me-2"></i>
-          <strong>Manual Timetable Entry:</strong> Build your timetable by adding slots one by one. 
+          <strong>Manual Timetable Entry:</strong> Build your timetable by adding slots one by one.
           This approach gives you full control over each entry and ensures data accuracy.
         </Alert>
 
@@ -459,7 +487,7 @@ const TimetableImport = () => {
         {/* Data Validation Info */}
         <Alert variant="warning" className="mb-4">
           <i className="fas fa-exclamation-triangle me-2"></i>
-          <strong>Data Validation:</strong> 
+          <strong>Data Validation:</strong>
           <div className="mt-2">
             <span className="me-3">
               <i className="fas fa-users me-1"></i>
@@ -485,7 +513,7 @@ const TimetableImport = () => {
           )}
           <div className="mt-2">
             <small className="text-muted">
-              <strong>⚠️ Important:</strong> Make sure subjects are assigned to classes and teachers are assigned to subjects in the system 
+              <strong>⚠️ Important:</strong> Make sure subjects are assigned to classes and teachers are assigned to subjects in the system
               before creating timetable slots. The backend validates these relationships.
             </small>
           </div>
@@ -605,7 +633,7 @@ const TimetableImport = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="mb-3">
                   <h6 className="fw-bold">Optional Fields:</h6>
                   <div className="d-flex flex-wrap gap-1">
@@ -628,65 +656,179 @@ const TimetableImport = () => {
 
 
 
-        {/* Add Timetable Slot Modal */}
-        <Modal 
-          show={showAddSlot} 
+        {/* Add Timetable Slot Modal - Modern Google-style Design */}
+        <Modal
+          show={showAddSlot}
           onHide={() => setShowAddSlot(false)}
           size="lg"
           backdrop="static"
+          centered
         >
-          <Modal.Header closeButton>
-            <Modal.Title>
-              <i className="fas fa-plus me-2"></i>
-              Add New Timetable Slot
+          <Modal.Header
+            closeButton
+            style={{
+              borderBottom: 'none',
+              padding: '24px 24px 16px 24px'
+            }}
+          >
+            <Modal.Title style={{
+              fontSize: '24px',
+              fontWeight: '400',
+              color: '#202124',
+              fontFamily: "'Google Sans', 'Roboto', sans-serif"
+            }}>
+              Add Timetable Slot
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+
+          <Modal.Body style={{ padding: '0 24px 24px 24px' }}>
             <Form>
-              <Row>
+              {/* Days Selection Section */}
+              <div style={{
+                marginBottom: '28px',
+                padding: '20px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '12px',
+                border: '1px solid #e8eaed'
+              }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#5f6368',
+                  marginBottom: '16px',
+                  letterSpacing: '0.25px'
+                }}>
+                  SELECT DAYS
+                </div>
+
+                {/* Select All */}
+                <div style={{
+                  marginBottom: '16px',
+                  paddingBottom: '16px',
+                  borderBottom: '1px solid #dadce0'
+                }}>
+                  <Form.Check
+                    type="checkbox"
+                    id="select-all-days"
+                    label="All Working Days"
+                    checked={formData.selectedDays.length === days.length}
+                    onChange={handleSelectAllDays}
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      color: '#202124'
+                    }}
+                  />
+                </div>
+
+                {/* Individual Days */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: '12px'
+                }}>
+                  {days.map(day => (
+                    <Form.Check
+                      key={day}
+                      type="checkbox"
+                      id={`day-${day}`}
+                      label={day}
+                      checked={formData.selectedDays.includes(day)}
+                      onChange={() => handleDayToggle(day)}
+                      style={{
+                        fontSize: '14px',
+                        color: '#3c4043'
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {formData.selectedDays.length > 0 && (
+                  <div style={{
+                    marginTop: '16px',
+                    padding: '12px',
+                    backgroundColor: '#e8f5e9',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    color: '#1e8e3e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <i className="fas fa-check-circle"></i>
+                    <span>{formData.selectedDays.length} day(s): {formData.selectedDays.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Form Fields Grid */}
+              <Row className="g-4">
+                {/* Period */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Day *</Form.Label>
-                    <Form.Select
-                      name="day"
-                      value={formData.day}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Day</option>
-                      {days.map(day => (
-                        <option key={day} value={day}>{day}</option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Period *</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      PERIOD
+                    </Form.Label>
                     <Form.Select
                       name="period"
                       value={formData.period}
                       onChange={handleChange}
                       required
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     >
-                      <option value="">Select Period</option>
+                      <option value="">Select period</option>
                       {periods.map(period => (
                         <option key={period} value={period}>Period {period}</option>
                       ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
+                {/* Class */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Class *</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      CLASS
+                    </Form.Label>
                     <Form.Select
                       name="class_name"
                       value={formData.class_name}
                       onChange={handleChange}
                       required
                       disabled={loadingData}
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     >
-                      <option value="">Select Class</option>
+                      <option value="">Select class</option>
                       {Array.isArray(classes) && classes.length > 0 ? (
                         classes.map(cls => (
                           <option key={cls.id} value={cls.class_name}>
@@ -695,44 +837,79 @@ const TimetableImport = () => {
                         ))
                       ) : (
                         <option value="" disabled>
-                          {loadingData ? 'Loading classes...' : 'No classes available'}
+                          {loadingData ? 'Loading...' : 'No classes available'}
                         </option>
                       )}
                     </Form.Select>
-                    {!loadingData && classes.length === 0 && (
-                      <Form.Text className="text-warning">
-                        No classes found. Please add classes first.
-                      </Form.Text>
-                    )}
                   </Form.Group>
                 </Col>
+
+                {/* Section */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Section *</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      SECTION
+                    </Form.Label>
                     <Form.Select
                       name="section"
                       value={formData.section}
                       onChange={handleChange}
                       required
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     >
-                      <option value="">Select Section</option>
+                      <option value="">Select section</option>
                       {['A', 'B', 'C', 'D', 'E', 'F'].map(section => (
                         <option key={section} value={section}>Section {section}</option>
                       ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
+                {/* Subject */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Subject *</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      SUBJECT
+                    </Form.Label>
                     <Form.Select
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
                       required
                       disabled={loadingData}
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     >
-                      <option value="">Select Subject</option>
+                      <option value="">Select subject</option>
                       {Array.isArray(subjects) && subjects.length > 0 ? (
                         subjects.map(subject => (
                           <option key={subject.id} value={subject.name}>
@@ -741,27 +918,42 @@ const TimetableImport = () => {
                         ))
                       ) : (
                         <option value="" disabled>
-                          {loadingData ? 'Loading subjects...' : 'No subjects available'}
+                          {loadingData ? 'Loading...' : 'No subjects available'}
                         </option>
                       )}
                     </Form.Select>
-                    {!loadingData && subjects.length === 0 && (
-                      <Form.Text className="text-warning">
-                        No subjects found. Please add subjects first.
-                      </Form.Text>
-                    )}
                   </Form.Group>
                 </Col>
+
+                {/* Teacher */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Teacher *</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      TEACHER
+                    </Form.Label>
                     <Form.Select
                       name="teacher"
                       value={formData.teacher}
                       onChange={handleChange}
                       required
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     >
-                      <option value="">Select Teacher</option>
+                      <option value="">Select teacher</option>
                       {Array.isArray(teachers) && teachers.length > 0 ? (
                         teachers.map(teacher => (
                           <option key={teacher.id} value={teacher.name}>
@@ -769,75 +961,96 @@ const TimetableImport = () => {
                           </option>
                         ))
                       ) : (
-                        <option value="" disabled>Loading teachers...</option>
+                        <option value="" disabled>Loading...</option>
                       )}
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
+                {/* Room */}
                 <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Room</Form.Label>
+                  <Form.Group>
+                    <Form.Label style={{
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      color: '#5f6368',
+                      marginBottom: '8px',
+                      letterSpacing: '0.25px'
+                    }}>
+                      ROOM (OPTIONAL)
+                    </Form.Label>
                     <Form.Control
                       type="text"
                       name="room"
                       value={formData.room}
                       onChange={handleChange}
-                      placeholder="e.g., 101, Lab 2"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Start Time</Form.Label>
-                    <Form.Control
-                      type="time"
-                      name="start_time"
-                      value={formData.start_time}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>End Time</Form.Label>
-                    <Form.Control
-                      type="time"
-                      name="end_time"
-                      value={formData.end_time}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Notes</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleChange}
-                      placeholder="e.g., Lab session, Special class"
+                      placeholder="e.g., Room 101"
+                      style={{
+                        borderRadius: '8px',
+                        border: '1px solid #dadce0',
+                        padding: '12px 16px',
+                        fontSize: '15px',
+                        color: '#202124',
+                        transition: 'all 0.2s'
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = '#1a73e8'}
+                      onBlur={(e) => e.target.style.borderColor = '#dadce0'}
                     />
                   </Form.Group>
                 </Col>
               </Row>
             </Form>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowAddSlot(false)}>
+
+          <Modal.Footer style={{
+            borderTop: 'none',
+            padding: '16px 24px 24px 24px',
+            gap: '12px'
+          }}>
+            <Button
+              variant="link"
+              onClick={() => setShowAddSlot(false)}
+              style={{
+                color: '#1a73e8',
+                textDecoration: 'none',
+                fontWeight: '500',
+                fontSize: '14px',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f3f4'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
               onClick={addTimetableSlot}
+              style={{
+                backgroundColor: '#1a73e8',
+                border: 'none',
+                fontWeight: '500',
+                fontSize: '14px',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                boxShadow: '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#1765cc';
+                e.target.style.boxShadow = '0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#1a73e8';
+                e.target.style.boxShadow = '0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)';
+              }}
             >
-              <i className="fas fa-plus me-2"></i>
               Add Slot
             </Button>
           </Modal.Footer>
-        </Modal>
-      </Container>
-    </div>
+        </Modal >
+      </Container >
+    </div >
   );
 };
 

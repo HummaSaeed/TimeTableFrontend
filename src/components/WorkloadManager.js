@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button, Tabs, Tab, Alert } from 'react-bootstrap';
 
-const WorkloadManager = ({ 
-  timetableSlots = [], 
-  teachers = [], 
+const WorkloadManager = ({
+  timetableSlots = [],
+  teachers = [],
   viewType = 'daily', // 'daily', 'weekly', 'monthly'
-  showSubstitutions = false 
+  showSubstitutions = false
 }) => {
   const [activeTab, setActiveTab] = useState('daily');
   const [workloadData, setWorkloadData] = useState({});
@@ -16,21 +16,21 @@ const WorkloadManager = ({
 
   const calculateWorkload = () => {
     const workload = {};
-    
+
     teachers.forEach(teacher => {
-      const teacherSlots = timetableSlots.filter(slot => 
+      const teacherSlots = timetableSlots.filter(slot =>
         slot.teacher_name === teacher.name && slot.is_active
       );
-      
+
       // Daily workload (same for all cases as requested)
       const dailyWorkload = calculateDailyWorkload(teacherSlots);
-      
+
       // Weekly workload (for substitutions)
       const weeklyWorkload = showSubstitutions ? calculateWeeklyWorkload(teacherSlots) : null;
-      
+
       // Monthly workload (for substitutions)
       const monthlyWorkload = showSubstitutions ? calculateMonthlyWorkload(teacherSlots) : null;
-      
+
       workload[teacher.name] = {
         daily: dailyWorkload,
         weekly: weeklyWorkload,
@@ -38,18 +38,18 @@ const WorkloadManager = ({
         totalSlots: teacherSlots.length
       };
     });
-    
+
     setWorkloadData(workload);
   };
 
   const calculateDailyWorkload = (slots) => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dailyCounts = {};
-    
+
     days.forEach(day => {
       dailyCounts[day] = slots.filter(slot => slot.day === day).length;
     });
-    
+
     return {
       total: slots.length,
       daily: dailyCounts,
@@ -61,13 +61,13 @@ const WorkloadManager = ({
     // Calculate weekly workload for substitution planning
     const weeks = getWeeksInMonth();
     const weeklyCounts = {};
-    
+
     weeks.forEach(week => {
-      weeklyCounts[week] = slots.filter(slot => 
+      weeklyCounts[week] = slots.filter(slot =>
         isSlotInWeek(slot, week)
       ).length;
     });
-    
+
     return {
       total: slots.length,
       weekly: weeklyCounts,
@@ -79,13 +79,13 @@ const WorkloadManager = ({
     // Calculate monthly workload for substitution planning
     const months = getMonthsInYear();
     const monthlyCounts = {};
-    
+
     months.forEach(month => {
-      monthlyCounts[month] = slots.filter(slot => 
+      monthlyCounts[month] = slots.filter(slot =>
         isSlotInMonth(slot, month)
       ).length;
     });
-    
+
     return {
       total: slots.length,
       monthly: monthlyCounts,
@@ -98,16 +98,16 @@ const WorkloadManager = ({
     const weeks = [];
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
+
     let currentWeek = 1;
     let currentDate = new Date(firstDay);
-    
+
     while (currentDate <= lastDay) {
       weeks.push(`Week ${currentWeek}`);
       currentDate.setDate(currentDate.getDate() + 7);
       currentWeek++;
     }
-    
+
     return weeks;
   };
 
@@ -270,7 +270,7 @@ const WorkloadManager = ({
     const totalTeachers = Object.keys(workloadData).length;
     const totalPeriods = Object.values(workloadData).reduce((sum, data) => sum + data.totalSlots, 0);
     const averagePerTeacher = totalTeachers > 0 ? Math.round(totalPeriods / totalTeachers * 10) / 10 : 0;
-    
+
     return (
       <Row className="mb-4">
         <Col md={3}>
@@ -301,7 +301,7 @@ const WorkloadManager = ({
           <Card className="border-warning">
             <Card.Body className="text-center">
               <h3 className="text-warning">
-                {Object.values(workloadData).filter(data => 
+                {Object.values(workloadData).filter(data =>
                   data.daily.total > data.daily.average * 1.3
                 ).length}
               </h3>
@@ -324,7 +324,7 @@ const WorkloadManager = ({
         </Card.Header>
         <Card.Body>
           {renderWorkloadSummary()}
-          
+
           <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
             <Tab eventKey="daily" title="Daily Workload">
               <Alert variant="info" className="mb-3">
@@ -333,25 +333,25 @@ const WorkloadManager = ({
               </Alert>
               {renderDailyWorkload()}
             </Tab>
-            
+
             {showSubstitutions && (
-              <>
-                <Tab eventKey="weekly" title="Weekly Workload">
-                  <Alert variant="warning" className="mb-3">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Weekly Workload:</strong> For substitution planning and weekly analysis.
-                  </Alert>
-                  {renderWeeklyWorkload()}
-                </Tab>
-                
-                <Tab eventKey="monthly" title="Monthly Workload">
-                  <Alert variant="warning" className="mb-3">
-                    <i className="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Monthly Workload:</strong> For substitution planning and monthly analysis.
-                  </Alert>
-                  {renderMonthlyWorkload()}
-                </Tab>
-              </>
+              <Tab eventKey="weekly" title="Weekly Workload">
+                <Alert variant="warning" className="mb-3">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Weekly Workload:</strong> For substitution planning and weekly analysis.
+                </Alert>
+                {renderWeeklyWorkload()}
+              </Tab>
+            )}
+
+            {showSubstitutions && (
+              <Tab eventKey="monthly" title="Monthly Workload">
+                <Alert variant="warning" className="mb-3">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Monthly Workload:</strong> For substitution planning and monthly analysis.
+                </Alert>
+                {renderMonthlyWorkload()}
+              </Tab>
             )}
           </Tabs>
         </Card.Body>

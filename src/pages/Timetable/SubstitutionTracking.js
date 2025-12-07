@@ -23,7 +23,7 @@ const SubstitutionTracking = () => {
   const [teachers, setTeachers] = useState([]);
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [activeTab, setActiveTab] = useState('mark-absent');
-  
+
   // For marking teacher absent
   const [substitutionForm, setSubstitutionForm] = useState({
     teacher_id: '',
@@ -31,26 +31,26 @@ const SubstitutionTracking = () => {
     reason: ''
   });
   const [substitutionResult, setSubstitutionResult] = useState(null);
-  
+
   // For bulk mark absent
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
   const [bulkResult, setBulkResult] = useState(null);
-  
+
   // For today's grid
   const [gridDate, setGridDate] = useState(new Date().toISOString().split('T')[0]);
   const [gridData, setGridData] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [dayName, setDayName] = useState('');
   const [statistics, setStatistics] = useState(null);
-  
+
   // For records
   const [substitutionLogs, setSubstitutionLogs] = useState([]);
   const [recordView, setRecordView] = useState('weekly'); // 'weekly', 'monthly', 'total'
   const [selectedWeek, setSelectedWeek] = useState(getWeekDates(new Date()));
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  
+
   // For workload tracking
   const [teacherWorkload, setTeacherWorkload] = useState({});
   const [teacherStats, setTeacherStats] = useState(null);
@@ -86,11 +86,11 @@ const SubstitutionTracking = () => {
       ]);
 
       const [teachersRes, profileRes, statsRes] = results;
-      
+
       setTeachers(teachersRes.status === 'fulfilled' ? (teachersRes.value.data?.results || teachersRes.value.data || []) : []);
       setSchoolProfile(profileRes.status === 'fulfilled' ? profileRes.value.data : null);
       setTeacherStats(statsRes.status === 'fulfilled' ? statsRes.value.data : null);
-      
+
     } catch (error) {
       setError('Failed to fetch data');
     } finally {
@@ -102,7 +102,7 @@ const SubstitutionTracking = () => {
     try {
       const response = await teachersAPI.getTodaysSubstitutionGrid(gridDate);
       const data = response.data;
-      
+
       if (data.success) {
         setGridData(data.grid_data || []);
         setPeriods(data.periods || []);
@@ -133,7 +133,7 @@ const SubstitutionTracking = () => {
 
   const calculateWorkloadFromLogs = (logs) => {
     const workload = {};
-    
+
     teachers.forEach(teacher => {
       workload[teacher.id] = {
         id: teacher.id,
@@ -152,13 +152,13 @@ const SubstitutionTracking = () => {
         const weekKey = `${logDate.getFullYear()}-W${getWeekNumber(logDate)}`;
         const monthKey = `${logDate.getFullYear()}-${logDate.getMonth()}`;
         const dayKey = log.date;
-        
+
         workload[teacherId].totalSubstitutions++;
-        workload[teacherId].weeklySubstitutions[weekKey] = 
+        workload[teacherId].weeklySubstitutions[weekKey] =
           (workload[teacherId].weeklySubstitutions[weekKey] || 0) + 1;
-        workload[teacherId].monthlySubstitutions[monthKey] = 
+        workload[teacherId].monthlySubstitutions[monthKey] =
           (workload[teacherId].monthlySubstitutions[monthKey] || 0) + 1;
-        workload[teacherId].dailySubstitutions[dayKey] = 
+        workload[teacherId].dailySubstitutions[dayKey] =
           (workload[teacherId].dailySubstitutions[dayKey] || 0) + 1;
       }
     });
@@ -174,19 +174,19 @@ const SubstitutionTracking = () => {
 
   const handleMarkAbsent = async (e) => {
     e.preventDefault();
-    
+
     if (bulkMode) {
       // Handle bulk mark absent
       if (selectedTeacherIds.length === 0) {
         setError('Please select at least one teacher');
         return;
       }
-      
+
       try {
         setLoading(true);
         setError(null);
         setSuccess(null);
-        
+
         const response = await teachersAPI.markAbsentBulk({
           teacher_ids: selectedTeacherIds,
           date: substitutionForm.date,
@@ -196,13 +196,13 @@ const SubstitutionTracking = () => {
         if (response.data) {
           setBulkResult(response.data);
           setSuccess(response.data.message);
-          
+
           // Show warnings if any
           if (response.data.warnings && response.data.warnings.length > 0) {
             const warningMsg = response.data.warnings.join('\n');
             alert('Bulk operation completed with warnings:\n\n' + warningMsg);
           }
-          
+
           // Reset form
           setSelectedTeacherIds([]);
           setSubstitutionForm({
@@ -210,7 +210,7 @@ const SubstitutionTracking = () => {
             date: new Date().toISOString().split('T')[0],
             reason: ''
           });
-          
+
           // Refresh data
           await fetchData();
         }
@@ -231,7 +231,7 @@ const SubstitutionTracking = () => {
         setLoading(true);
         setError(null);
         setSuccess(null);
-        
+
         const response = await teachersAPI.markAbsent({
           teacher_id: parseInt(substitutionForm.teacher_id),
           date: substitutionForm.date,
@@ -241,20 +241,20 @@ const SubstitutionTracking = () => {
         if (response.data) {
           setSubstitutionResult(response.data);
           setSuccess(response.data.message);
-          
+
           // Show warnings if any
           if (response.data.warnings && response.data.warnings.length > 0) {
             const warningMsg = response.data.warnings.join('\n');
             alert('Substitutions assigned with warnings:\n\n' + warningMsg);
           }
-          
+
           // Reset form
           setSubstitutionForm({
             teacher_id: '',
             date: new Date().toISOString().split('T')[0],
             reason: ''
           });
-          
+
           // Refresh data
           await fetchData();
         }
@@ -266,7 +266,7 @@ const SubstitutionTracking = () => {
       }
     }
   };
-  
+
   const toggleTeacherSelection = (teacherId) => {
     if (selectedTeacherIds.includes(teacherId)) {
       setSelectedTeacherIds(selectedTeacherIds.filter(id => id !== teacherId));
@@ -300,7 +300,7 @@ const SubstitutionTracking = () => {
   const navigateMonth = (direction) => {
     let newMonth = selectedMonth + (direction === 'next' ? 1 : -1);
     let newYear = selectedYear;
-    
+
     if (newMonth > 11) {
       newMonth = 0;
       newYear++;
@@ -308,7 +308,7 @@ const SubstitutionTracking = () => {
       newMonth = 11;
       newYear--;
     }
-    
+
     setSelectedMonth(newMonth);
     setSelectedYear(newYear);
   };
@@ -322,7 +322,7 @@ const SubstitutionTracking = () => {
         dayName,
         statistics
       );
-      
+
       if (result.success) {
         pdfService.downloadPDF(result.data, result.filename);
       }
@@ -426,7 +426,7 @@ const SubstitutionTracking = () => {
                 </Form.Group>
               </Col>
             )}
-            
+
             <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Date *</Form.Label>
@@ -441,7 +441,7 @@ const SubstitutionTracking = () => {
                 />
               </Form.Group>
             </Col>
-            
+
             <Col md={4}>
               <Form.Group className="mb-3">
                 <Form.Label>Reason</Form.Label>
@@ -459,8 +459,8 @@ const SubstitutionTracking = () => {
           </Row>
 
           <div className="d-flex justify-content-end">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               variant="danger"
               size="lg"
               disabled={loading || (!bulkMode && !substitutionForm.teacher_id) || (bulkMode && selectedTeacherIds.length === 0) || !substitutionForm.date}
@@ -479,7 +479,7 @@ const SubstitutionTracking = () => {
             </Button>
           </div>
         </Form>
-        
+
         {/* Bulk Results */}
         {bulkMode && bulkResult && (
           <div className="mt-4">
@@ -503,7 +503,7 @@ const SubstitutionTracking = () => {
                   </Badge>
                 )}
               </div>
-              
+
               {bulkResult.warnings && bulkResult.warnings.length > 0 && (
                 <div className="mt-3">
                   <strong>Warnings:</strong>
@@ -515,7 +515,7 @@ const SubstitutionTracking = () => {
                 </div>
               )}
             </Alert>
-            
+
             {bulkResult.results && bulkResult.results.length > 0 && (
               <Card className="mt-3">
                 <Card.Header>
@@ -578,7 +578,7 @@ const SubstitutionTracking = () => {
                   Unsubstituted: {substitutionResult.unsubstituted}
                 </Badge>
               </div>
-              
+
               {substitutionResult.warnings && substitutionResult.warnings.length > 0 && (
                 <div className="mt-3">
                   <strong>Warnings:</strong>
@@ -628,12 +628,12 @@ const SubstitutionTracking = () => {
                                 <strong>Regular:</strong> {sub.substitute_workload.regular_periods} periods
                               </small>
                               <small className="text-muted d-block">
-                                <strong>Weekly:</strong> {sub.substitute_workload.weekly_substitutions} | 
-                                <strong> Monthly:</strong> {sub.substitute_workload.monthly_substitutions || 0} | 
+                                <strong>Weekly:</strong> {sub.substitute_workload.weekly_substitutions} |
+                                <strong> Monthly:</strong> {sub.substitute_workload.monthly_substitutions || 0} |
                                 <strong> All-Time:</strong> {sub.substitute_workload.all_time_substitutions || 0}
                               </small>
                               <small className="text-muted d-block">
-                                <strong>Today:</strong> {sub.substitute_workload.daily_substitutions} | 
+                                <strong>Today:</strong> {sub.substitute_workload.daily_substitutions} |
                                 <strong> Batch:</strong> {sub.substitute_workload.batch_assignments || 0}
                               </small>
                               {sub.substitute_workload.fairness_score !== undefined && (
@@ -685,31 +685,31 @@ const SubstitutionTracking = () => {
         </Col>
         <Col md={4}>
           <div className="d-flex gap-2 align-items-end h-100 pb-2">
-            <Button 
+            <Button
               onClick={() => {
                 const newDate = new Date(gridDate);
                 newDate.setDate(newDate.getDate() - 1);
                 setGridDate(newDate.toISOString().split('T')[0]);
-              }} 
-              variant="outline-secondary" 
+              }}
+              variant="outline-secondary"
               size="sm"
             >
               <i className="fas fa-chevron-left"></i> Previous
             </Button>
-            <Button 
-              onClick={() => setGridDate(new Date().toISOString().split('T')[0])} 
-              variant="outline-primary" 
+            <Button
+              onClick={() => setGridDate(new Date().toISOString().split('T')[0])}
+              variant="outline-primary"
               size="sm"
             >
               Today
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 const newDate = new Date(gridDate);
                 newDate.setDate(newDate.getDate() + 1);
                 setGridDate(newDate.toISOString().split('T')[0]);
-              }} 
-              variant="outline-secondary" 
+              }}
+              variant="outline-secondary"
               size="sm"
             >
               Next <i className="fas fa-chevron-right"></i>
@@ -781,13 +781,13 @@ const SubstitutionTracking = () => {
               <Table bordered hover className="mb-0" style={{ fontSize: '0.85rem' }}>
                 <thead className="table-danger">
                   <tr>
-                    <th style={{ 
-                      minWidth: '180px', 
-                      position: 'sticky', 
-                      left: 0, 
-                      backgroundColor: '#dc3545', 
-                      color: 'white', 
-                      zIndex: 10 
+                    <th style={{
+                      minWidth: '180px',
+                      position: 'sticky',
+                      left: 0,
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      zIndex: 10
                     }}>
                       Teacher (Absent)
                     </th>
@@ -801,9 +801,9 @@ const SubstitutionTracking = () => {
                 <tbody>
                   {gridData.map((row) => (
                     <tr key={row.teacher_id}>
-                      <td className="fw-bold bg-light" style={{ 
-                        position: 'sticky', 
-                        left: 0, 
+                      <td className="fw-bold bg-light" style={{
+                        position: 'sticky',
+                        left: 0,
                         zIndex: 5,
                         backgroundColor: '#f8f9fa !important'
                       }}>
@@ -820,7 +820,7 @@ const SubstitutionTracking = () => {
                       </td>
                       {periods.map(period => {
                         const periodData = row.periods[period];
-                        
+
                         if (!periodData || !periodData.has_class) {
                           return (
                             <td key={period} className="text-center text-muted" style={{ backgroundColor: '#f8f9fa' }}>
@@ -828,9 +828,9 @@ const SubstitutionTracking = () => {
                             </td>
                           );
                         }
-                        
+
                         return (
-                          <td key={period} style={{ 
+                          <td key={period} style={{
                             backgroundColor: periodData.status === 'substituted' ? '#d4edda' : '#f8d7da',
                             verticalAlign: 'top',
                             padding: '8px'
@@ -900,7 +900,7 @@ const SubstitutionTracking = () => {
   // RENDER: Substitution Records Tab
   const renderRecordsTab = () => {
     const filteredLogs = getFilteredLogs();
-    
+
     // Calculate summary stats
     const teacherSubstitutionCount = {};
     filteredLogs.forEach(log => {
@@ -915,8 +915,8 @@ const SubstitutionTracking = () => {
           <Card.Body className="py-2">
             <Row className="align-items-center">
               <Col md={4}>
-                <Form.Select 
-                  value={recordView} 
+                <Form.Select
+                  value={recordView}
                   onChange={(e) => setRecordView(e.target.value)}
                   size="sm"
                 >
@@ -925,7 +925,7 @@ const SubstitutionTracking = () => {
                   <option value="total">All Time</option>
                 </Form.Select>
               </Col>
-              
+
               <Col md={8} className="text-end">
                 {recordView === 'weekly' && (
                   <div className="d-flex justify-content-end align-items-center gap-2">
@@ -940,7 +940,7 @@ const SubstitutionTracking = () => {
                     </Button>
                   </div>
                 )}
-                
+
                 {recordView === 'monthly' && (
                   <div className="d-flex justify-content-end align-items-center gap-2">
                     <Button onClick={() => navigateMonth('prev')} variant="outline-secondary" size="sm">
@@ -1017,49 +1017,51 @@ const SubstitutionTracking = () => {
                 <p className="small">No substitutions were made during this period.</p>
               </div>
             ) : (
-              <Table striped bordered hover className="mb-0">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Day</th>
-                    <th>Period</th>
-                    <th>Class</th>
-                    <th>Subject</th>
-                    <th>Original Teacher</th>
-                    <th>Substitute</th>
-                    <th>Reason</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLogs.map(log => {
-                    const logDate = new Date(log.date);
-                    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][logDate.getDay()];
-                    
-                    return (
-                      <tr key={log.id}>
-                        <td>{logDate.toLocaleDateString()}</td>
-                        <td>{dayName}</td>
-                        <td className="text-center">{log.timetable_slot.period_number}</td>
-                        <td>{log.timetable_slot.class_name}</td>
-                        <td>{log.timetable_slot.subject_name}</td>
-                        <td>
-                          <Badge bg="danger" className="me-1">
-                            <i className="fas fa-user-times me-1"></i>
-                            {log.original_teacher.name}
-                          </Badge>
-                        </td>
-                        <td>
-                          <Badge bg="success">
-                            <i className="fas fa-user-check me-1"></i>
-                            {log.substitute_teacher.name}
-                          </Badge>
-                        </td>
-                        <td><small>{log.reason || '-'}</small></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
+              <div className="table-responsive">
+                <Table striped bordered hover className="mb-0">
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: '100px' }}>Date</th>
+                      <th style={{ minWidth: '100px' }}>Day</th>
+                      <th className="text-center" style={{ minWidth: '80px' }}>Period</th>
+                      <th style={{ minWidth: '120px' }}>Class</th>
+                      <th style={{ minWidth: '150px' }}>Subject</th>
+                      <th style={{ minWidth: '180px' }}>Original Teacher</th>
+                      <th style={{ minWidth: '180px' }}>Substitute</th>
+                      <th style={{ minWidth: '150px' }}>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLogs.map(log => {
+                      const logDate = new Date(log.date);
+                      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][logDate.getDay()];
+
+                      return (
+                        <tr key={log.id}>
+                          <td>{logDate.toLocaleDateString()}</td>
+                          <td>{dayName}</td>
+                          <td className="text-center">{log.timetable_slot.period_number}</td>
+                          <td>{log.timetable_slot.class_name}</td>
+                          <td>{log.timetable_slot.subject_name}</td>
+                          <td>
+                            <Badge bg="danger" className="me-1">
+                              <i className="fas fa-user-times me-1"></i>
+                              {log.original_teacher.name}
+                            </Badge>
+                          </td>
+                          <td>
+                            <Badge bg="success">
+                              <i className="fas fa-user-check me-1"></i>
+                              {log.substitute_teacher.name}
+                            </Badge>
+                          </td>
+                          <td><small>{log.reason || '-'}</small></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
             )}
           </Card.Body>
         </Card>
@@ -1104,11 +1106,10 @@ const SubstitutionTracking = () => {
             <Row className="mb-4">
               {teacherStats.teacher_stats && teacherStats.teacher_stats.slice(0, 5).map(stat => (
                 <Col md={4} lg={2} key={stat.teacher_id} className="mb-3">
-                  <Card className={`border-0 text-center ${
-                    stat.weekly_substitutions >= 5 ? 'bg-danger text-white' :
+                  <Card className={`border-0 text-center ${stat.weekly_substitutions >= 5 ? 'bg-danger text-white' :
                     stat.weekly_substitutions >= 4 ? 'bg-warning' :
-                    'bg-light'
-                  }`}>
+                      'bg-light'
+                    }`}>
                     <Card.Body className="py-2">
                       <div className="small fw-bold mb-1">{stat.teacher_name}</div>
                       <div className="h5 mb-0">{stat.weekly_substitutions}</div>
@@ -1120,63 +1121,80 @@ const SubstitutionTracking = () => {
             </Row>
           )}
 
-          <Table striped bordered hover responsive>
-            <thead className="table-dark">
-              <tr>
-                <th>Teacher</th>
-                <th className="text-center">Regular Periods</th>
-                <th className="text-center">This Week</th>
-                <th className="text-center">This Month</th>
-                <th className="text-center">All Time</th>
-                <th className="text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workloadArray.map(teacher => {
-                const weeklySubs = teacher.weeklySubstitutions[weekKey] || 0;
-                const monthlySubs = teacher.monthlySubstitutions[monthKey] || 0;
-                
-                let statusBg = 'success';
-                let statusText = 'Available';
-                
-                if (weeklySubs >= 5) {
-                  statusBg = 'danger';
-                  statusText = 'At Limit';
-                } else if (weeklySubs >= 4) {
-                  statusBg = 'warning';
-                  statusText = 'Warning';
-                } else if (weeklySubs >= 2) {
-                  statusBg = 'info';
-                  statusText = 'Normal Load';
-                }
-                
-                return (
-                  <tr key={teacher.id}>
-                    <td className="fw-semibold">{teacher.name}</td>
-                    <td className="text-center">
-                      <Badge bg="secondary">
-                        {teacherStats?.teacher_stats?.find(s => s.teacher_id === teacher.id)?.regular_periods || 0}
-                      </Badge>
-                    </td>
-                    <td className="text-center">
-                      <Badge bg={weeklySubs >= 5 ? 'danger' : weeklySubs >= 4 ? 'warning' : 'success'}>
-                        {weeklySubs}
-                      </Badge>
-                    </td>
-                    <td className="text-center">
-                      <Badge bg="info">{monthlySubs}</Badge>
-                    </td>
-                    <td className="text-center">
-                      <Badge bg="primary">{teacher.totalSubstitutions}</Badge>
-                    </td>
-                    <td className="text-center">
-                      <Badge bg={statusBg}>{statusText}</Badge>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+          <div className="table-responsive">
+            <Table striped bordered hover className="mb-0">
+              <thead className="table-dark">
+                <tr>
+                  <th style={{
+                    minWidth: '180px',
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 1,
+                    backgroundColor: '#212529',
+                    color: 'white'
+                  }}>Teacher</th>
+                  <th className="text-center" style={{ minWidth: '120px' }}>Regular Periods</th>
+                  <th className="text-center" style={{ minWidth: '100px' }}>This Week</th>
+                  <th className="text-center" style={{ minWidth: '100px' }}>This Month</th>
+                  <th className="text-center" style={{ minWidth: '100px' }}>All Time</th>
+                  <th className="text-center" style={{ minWidth: '120px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workloadArray.map(teacher => {
+                  const weeklySubs = teacher.weeklySubstitutions[weekKey] || 0;
+                  const monthlySubs = teacher.monthlySubstitutions[monthKey] || 0;
+
+                  let statusBg = 'success';
+                  let statusText = 'Available';
+
+                  if (weeklySubs >= 5) {
+                    statusBg = 'danger';
+                    statusText = 'At Limit';
+                  } else if (weeklySubs >= 4) {
+                    statusBg = 'warning';
+                    statusText = 'Warning';
+                  } else if (weeklySubs >= 2) {
+                    statusBg = 'info';
+                    statusText = 'Normal Load';
+                  }
+
+                  return (
+                    <tr key={teacher.id}>
+                      <td className="fw-semibold" style={{
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: '#fff',
+                        borderRight: '1px solid #dee2e6'
+                      }}>
+                        {teacher.name}
+                      </td>
+                      <td className="text-center">
+                        <Badge bg="secondary">
+                          {teacherStats?.teacher_stats?.find(s => s.teacher_id === teacher.id)?.regular_periods || 0}
+                        </Badge>
+                      </td>
+                      <td className="text-center">
+                        <Badge bg={weeklySubs >= 5 ? 'danger' : weeklySubs >= 4 ? 'warning' : 'success'}>
+                          {weeklySubs}
+                        </Badge>
+                      </td>
+                      <td className="text-center">
+                        <Badge bg="info">{monthlySubs}</Badge>
+                      </td>
+                      <td className="text-center">
+                        <Badge bg="primary">{teacher.totalSubstitutions}</Badge>
+                      </td>
+                      <td className="text-center">
+                        <Badge bg={statusBg}>{statusText}</Badge>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
 
           {/* Workload Distribution Chart */}
           <Card className="border-0 bg-light mt-4">
@@ -1189,15 +1207,15 @@ const SubstitutionTracking = () => {
                 const weeklySubs = teacher.weeklySubstitutions[weekKey] || 0;
                 const maxSubs = Math.max(...workloadArray.map(t => t.weeklySubstitutions[weekKey] || 0), 1);
                 const percentage = (weeklySubs / maxSubs) * 100;
-                
+
                 return (
                   <div key={teacher.id} className="mb-3">
                     <div className="d-flex justify-content-between mb-1">
                       <span className="small fw-semibold">{teacher.name}</span>
                       <span className="small text-muted">{weeklySubs} substitutions</span>
                     </div>
-                    <ProgressBar 
-                      now={percentage} 
+                    <ProgressBar
+                      now={percentage}
                       variant={weeklySubs >= 5 ? 'danger' : weeklySubs >= 4 ? 'warning' : weeklySubs >= 2 ? 'info' : 'success'}
                       style={{ height: '6px' }}
                     />
@@ -1236,8 +1254,8 @@ const SubstitutionTracking = () => {
           </p>
         </Col>
         <Col xs="auto">
-          <Button 
-            variant="outline-primary" 
+          <Button
+            variant="outline-primary"
             size="sm"
             onClick={() => fetchData()}
           >
@@ -1254,7 +1272,7 @@ const SubstitutionTracking = () => {
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert variant="success" onClose={() => setSuccess(null)} dismissible className="mb-3">
           <i className="fas fa-check-circle me-2"></i>
@@ -1263,13 +1281,13 @@ const SubstitutionTracking = () => {
       )}
 
       {/* Main Tabs */}
-      <Tabs 
-        activeKey={activeTab} 
+      <Tabs
+        activeKey={activeTab}
         onSelect={(k) => setActiveTab(k)}
         className="mb-4"
       >
-        <Tab 
-          eventKey="mark-absent" 
+        <Tab
+          eventKey="mark-absent"
           title={
             <span>
               <i className="fas fa-user-times me-2"></i>
@@ -1281,9 +1299,9 @@ const SubstitutionTracking = () => {
             {renderMarkAbsentTab()}
           </div>
         </Tab>
-        
-        <Tab 
-          eventKey="grid" 
+
+        <Tab
+          eventKey="grid"
           title={
             <span>
               <i className="fas fa-table me-2"></i>
@@ -1295,9 +1313,9 @@ const SubstitutionTracking = () => {
             {renderGridTab()}
           </div>
         </Tab>
-        
-        <Tab 
-          eventKey="records" 
+
+        <Tab
+          eventKey="records"
           title={
             <span>
               <i className="fas fa-history me-2"></i>
@@ -1309,9 +1327,9 @@ const SubstitutionTracking = () => {
             {renderRecordsTab()}
           </div>
         </Tab>
-        
-        <Tab 
-          eventKey="workload" 
+
+        <Tab
+          eventKey="workload"
           title={
             <span>
               <i className="fas fa-balance-scale me-2"></i>

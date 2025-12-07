@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Row, Col, Card, Button, Badge,
-  Alert, Spinner, Dropdown, Tabs, Tab
+  Alert, Spinner, Dropdown, Tabs, Tab, Table, Modal, Form
 } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { timetableAPI, teachersAPI, schoolProfileAPI } from '../../services/api';
@@ -17,8 +17,17 @@ const TeacherTimetable = () => {
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState('timetable');
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const [selectedDay, setSelectedDay] = useState(days[0]); // Default to first day
+
+  // Edit/Delete state
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingSlotId, setDeletingSlotId] = useState(null);
 
   useEffect(() => {
     loadTeacherData();
@@ -31,37 +40,30 @@ const TeacherTimetable = () => {
     try {
       setLoading(true);
 
-      // Load teacher details
-      const teacherResponse = await teachersAPI.getTeacher(teacherId);
+      // Load teacher details - Fixed: use getById instead of getTeacher
+      const teacherResponse = await teachersAPI.getById(teacherId);
       setTeacher(teacherResponse.data);
 
       // Load school profile for break periods
       const profileResponse = await schoolProfileAPI.getProfile();
       setSchoolProfile(profileResponse.data);
 
-      // Load teacher's timetable
+      // Load teacher's timetable using specific endpoint
+      console.log('Fetching timetable for teacher ID:', teacherId);
       const timetableResponse = await timetableAPI.getByTeacher(teacherId);
-      const rawSlots = timetableResponse.data.results || [];
+      console.log('Timetable API Response:', timetableResponse);
 
-      // Inject teacher name into slots for WorkloadManager
-      const slotsWithTeacher = rawSlots.map(slot => ({
-        ...slot,
-        teacher_name: teacherResponse.data.name // Ensure teacher name matches for filtering
-      }));
+      const teacherSlots = timetableResponse.data.results || timetableResponse.data || [];
+      console.log('Loaded teacher slots:', teacherSlots);
 
-      setTimetableSlots(slotsWithTeacher);
+      setTimetableSlots(teacherSlots);
 
     } catch (err) {
+      console.error('Error loading teacher data:', err);
       setError(err.response?.data?.message || 'Failed to load teacher data');
     } finally {
       setLoading(false);
     }
-  };
-
-  const getSlotForTimeAndDay = (timeSlot, day) => {
-    return timetableSlots.find(slot =>
-      slot.time_slot === timeSlot && slot.day === day
-    );
   };
 
   const handleExportPDF = async () => {
@@ -74,6 +76,50 @@ const TeacherTimetable = () => {
       console.error('Export error:', err);
       setError('Failed to export PDF');
     }
+  };
+
+  const handleEditSlot = (slot) => {
+    setEditingSlot(slot);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateSlot = async (updatedSlot) => {
+    try {
+      await timetableAPI.update(updatedSlot.id, updatedSlot);
+      setSuccess('Slot updated successfully!');
+      setShowEditModal(false);
+      setEditingSlot(null);
+      loadTeacherData(); // Refresh data
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      setError('Failed to update slot');
+      console.error('Error updating slot:', error);
+    }
+  };
+
+  const handleDeleteSlot = (slotId) => {
+    setDeletingSlotId(slotId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await timetableAPI.delete(deletingSlotId);
+      setSuccess('Slot deleted successfully!');
+      setShowDeleteDialog(false);
+      setDeletingSlotId(null);
+      loadTeacherData(); // Refresh data
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      setError('Failed to delete slot');
+      console.error('Error deleting slot:', error);
+    }
+  };
+
+  const getSlotForPeriodAndDay = (period, day) => {
+    return timetableSlots.find(slot =>
+      slot.day === day && slot.period_number === period
+    );
   };
 
   if (loading) {
@@ -94,7 +140,7 @@ const TeacherTimetable = () => {
     );
   }
 
-  if (error) {
+  if (error && !teacher) {
     return (
       <div style={{
         padding: '24px',
@@ -168,8 +214,243 @@ const TeacherTimetable = () => {
     );
   }
 
-  const timeSlots = schoolProfile?.time_slots || [];
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const periods = [1, 2, 3, 4, 5, 6, 7, 8];
+
+  const renderMobileView = () => (
+    <div className="mobile-timetable-view">
+      {/* Day Navigation */}
+      <div className="day-nav-container mb-3" style={{
+        overflowX: 'auto',
+        whiteSpace: 'nowrap',
+        padding: '4px 0',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}>
+        <div className="d-flex gap-2">
+          {days.map(day => (
+            <Button
+              key={day}
+              onClick={() => setSelectedDay(day)}
+              variant={selectedDay === day ? 'success' : 'outline-secondary'}
+              style={{
+                borderRadius: '20px',
+                padding: '6px 16px',
+                fontSize: '14px',
+                border: selectedDay === day ? 'none' : '1px solid #dee2e6',
+                background: selectedDay === day ? '#1A6E48' : 'white',
+                color: selectedDay === day ? 'white' : '#6C757D',
+                flexShrink: 0
+              }}
+            >
+              {day}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Timeline List */}
+      <div className="timeline-container">
+        {periods.map(period => {
+          const slot = getSlotForPeriodAndDay(period, selectedDay);
+          return (
+            <div key={period} className="timeline-item mb-3" style={{ position: 'relative', paddingLeft: '20px' }}>
+              {/* Timeline Line/Dot */}
+              <div style={{
+                position: 'absolute',
+                left: '0',
+                top: '0',
+                bottom: '-16px',
+                width: '2px',
+                backgroundColor: '#e9ecef',
+                zIndex: 0
+              }}></div>
+              <div style={{
+                position: 'absolute',
+                left: '-4px',
+                top: '12px',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: slot ? (slot.is_active ? '#1A6E48' : '#dc3545') : '#adb5bd',
+                zIndex: 1
+              }}></div>
+
+              {/* Content Card */}
+              <Card style={{
+                border: 'none',
+                borderRadius: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                backgroundColor: slot ? (slot.is_active ? '#ffffff' : '#fff5f5') : '#f8f9fa'
+              }}>
+                <Card.Body className="p-3">
+                  <div className="d-flex justify-content-between align-items-start mb-1">
+                    <Badge bg="light" text="dark" className="border">
+                      Period {period}
+                    </Badge>
+                    {slot && (
+                      <div className="d-flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="link"
+                          className="p-0 text-primary"
+                          onClick={() => handleEditSlot(slot)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="link"
+                          className="p-0 text-danger ms-2"
+                          onClick={() => handleDeleteSlot(slot.id)}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {slot ? (
+                    <>
+                      <h5 className="mb-1" style={{ fontSize: '16px', fontWeight: '600', color: '#2c3e50' }}>
+                        {slot.subject}
+                      </h5>
+                      <div className="text-muted small mb-0">
+                        <i className="fas fa-users me-1" style={{ width: '16px' }}></i>
+                        {slot.class_name}-{slot.class_section}
+                      </div>
+                      {slot.room && (
+                        <div className="text-muted small mt-1">
+                          <i className="fas fa-map-marker-alt me-1" style={{ width: '16px' }}></i>
+                          Room: {slot.room}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-muted small fst-italic">
+                      Free Period
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderDesktopView = () => (
+    <div style={{
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      borderRadius: '8px',
+      marginBottom: '24px'
+    }}>
+      <Table responsive className="table-bordered">
+        <thead className="table-dark">
+          <tr>
+            <th style={{ width: '100px' }}>Period</th>
+            {days.map(day => (
+              <th key={day} className="text-center">{day}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map(period => (
+            <tr key={period}>
+              <td className="fw-bold text-center" style={{ backgroundColor: '#f8f9fa' }}>
+                Period {period}
+              </td>
+              {days.map(day => {
+                const slot = getSlotForPeriodAndDay(period, day);
+                return (
+                  <td key={`${day}-${period}`} className="text-center p-2">
+                    {slot ? (
+                      <div
+                        className="timetable-slot p-2 rounded position-relative"
+                        style={{
+                          backgroundColor: slot.is_active ? '#d4edda' : '#f8d7da',
+                          border: '1px solid #c3e6cb',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                          e.currentTarget.querySelector('.slot-actions').style.opacity = '1';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.boxShadow = 'none';
+                          e.currentTarget.querySelector('.slot-actions').style.opacity = '0';
+                        }}
+                      >
+                        <div className="fw-bold small">{slot.subject}</div>
+                        <div className="text-muted small">{slot.class_name}-{slot.class_section}</div>
+                        {slot.room && <div className="text-muted small">Room: {slot.room}</div>}
+
+                        {/* Action Buttons */}
+                        <div
+                          className="slot-actions"
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            display: 'flex',
+                            gap: '4px',
+                            opacity: '0',
+                            transition: 'opacity 0.2s'
+                          }}
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditSlot(slot);
+                            }}
+                            style={{
+                              background: '#1a73e8',
+                              border: 'none',
+                              borderRadius: '4px',
+                              color: 'white',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              cursor: 'pointer'
+                            }}
+                            title="Edit slot"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSlot(slot.id);
+                            }}
+                            style={{
+                              background: '#dc3545',
+                              border: 'none',
+                              borderRadius: '4px',
+                              color: 'white',
+                              padding: '4px 8px',
+                              fontSize: '11px',
+                              cursor: 'pointer'
+                            }}
+                            title="Delete slot"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-muted small">-</div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
+  );
 
   return (
     <div style={{
@@ -235,6 +516,21 @@ const TeacherTimetable = () => {
 
       <Row className="mb-4">
         <Col>
+          {/* Error Alert for operations */}
+          {error && teacher && (
+            <Alert variant="danger" onClose={() => setError(null)} dismissible className="mb-4">
+              {error}
+            </Alert>
+          )}
+
+          {/* Success Alert */}
+          {success && (
+            <Alert variant="success" onClose={() => setSuccess(null)} dismissible className="mb-4">
+              <i className="fas fa-check-circle me-2"></i>
+              {success}
+            </Alert>
+          )}
+
           <Card style={{
             background: '#FFFFFF',
             border: 'none',
@@ -291,17 +587,41 @@ const TeacherTimetable = () => {
               </div>
             </Card.Header>
             <Card.Body style={{ padding: '24px' }}>
-              <Tabs
-                activeKey={activeTab}
-                onSelect={(k) => setActiveTab(k)}
-                className="border-0"
-              >
-                <Tab eventKey="timetable" title={
-                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '500' }}>
-                    <i className="fas fa-calendar-week me-2"></i>
-                    Timetable View
-                  </span>
-                }>
+              <div className="d-flex gap-2 mb-4 border-bottom pb-3">
+                <Button
+                  variant={activeTab === 'timetable' ? 'primary' : 'light'}
+                  onClick={() => setActiveTab('timetable')}
+                  style={{
+                    background: activeTab === 'timetable' ? '#1A6E48' : 'transparent',
+                    color: activeTab === 'timetable' ? 'white' : '#6C757D',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    fontFamily: 'Poppins, sans-serif'
+                  }}
+                >
+                  <i className="fas fa-calendar-week me-2"></i>
+                  Timetable View
+                </Button>
+                <Button
+                  variant={activeTab === 'workload' ? 'primary' : 'light'}
+                  onClick={() => setActiveTab('workload')}
+                  style={{
+                    background: activeTab === 'workload' ? '#1A6E48' : 'transparent',
+                    color: activeTab === 'workload' ? 'white' : '#6C757D',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '500',
+                    fontFamily: 'Poppins, sans-serif'
+                  }}
+                >
+                  <i className="fas fa-chart-bar me-2"></i>
+                  Workload Analysis
+                </Button>
+              </div>
+
+              {activeTab === 'timetable' && (
+                <>
                   <div style={{ marginTop: '16px', marginBottom: '24px' }}>
                     <Alert style={{
                       background: 'var(--bs-primary-bg-subtle)',
@@ -315,47 +635,108 @@ const TeacherTimetable = () => {
                     </Alert>
                   </div>
 
-                  <div style={{
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
-                    WebkitOverflowScrolling: 'touch',
-                    borderRadius: '8px',
-                    marginBottom: '24px'
-                  }}>
-                    <TimetableGrid
-                      days={days}
-                      timeSlots={timeSlots}
-                      timetableSlots={timetableSlots}
-                      schoolProfile={schoolProfile}
-                      getSlotForTimeAndDay={getSlotForTimeAndDay}
-                      showBreakRows={true}
-                      viewType="teacher"
-                    />
-                  </div>
-                </Tab>
+                  {isMobile ? renderMobileView() : renderDesktopView()}
+                </>
+              )}
 
-                <Tab eventKey="workload" title={
-                  <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: '500' }}>
-                    <i className="fas fa-chart-bar me-2"></i>
-                    Workload Analysis
-                  </span>
-                }>
-                  <div style={{ marginTop: '16px' }}>
-                    <WorkloadManager
-                      timetableSlots={timetableSlots}
-                      teachers={[teacher]}
-                      viewType="daily"
-                      showSubstitutions={true}
-                    />
-                  </div>
-                </Tab>
-              </Tabs>
+              {activeTab === 'workload' && (
+                <div style={{ marginTop: '16px' }}>
+                  <WorkloadManager
+                    timetableSlots={timetableSlots}
+                    teachers={[teacher]}
+                    viewType="daily"
+                    showSubstitutions={true}
+                  />
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+      {/* Edit Slot Modal */}
+      {editingSlot && (
+        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+          <Modal.Header closeButton style={{ borderBottom: 'none', padding: '24px 24px 16px 24px' }}>
+            <Modal.Title style={{ fontSize: '24px', fontWeight: '400', color: '#202124' }}>
+              Edit Timetable Slot
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ padding: '0 24px 24px 24px' }}>
+            <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#e8f5e9', borderRadius: '8px' }}>
+              <strong>Current:</strong> {editingSlot.day}, Period {editingSlot.period_number} - {editingSlot.subject}
+            </div>
+            <p style={{ color: '#5f6368', fontSize: '14px' }}>
+              Note: Editing functionality will be fully implemented in the next update. For now, please delete and recreate the slot.
+            </p>
+          </Modal.Body>
+          <Modal.Footer style={{ borderTop: 'none', padding: '16px 24px 24px 24px' }}>
+            <Button variant="link" onClick={() => setShowEditModal(false)} style={{ color: '#1a73e8' }}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Modal show={showDeleteDialog} onHide={() => setShowDeleteDialog(false)} centered>
+        <Modal.Header closeButton style={{ borderBottom: 'none', padding: '24px 24px 16px 24px' }}>
+          <Modal.Title style={{ fontSize: '20px', fontWeight: '500', color: '#202124' }}>
+            Delete Timetable Slot?
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '0 24px 24px 24px' }}>
+          {deletingSlotId && (
+            <>
+              <p style={{ color: '#5f6368', marginBottom: '16px' }}>
+                Are you sure you want to delete this slot? This action cannot be undone.
+              </p>
+              <div style={{
+                padding: '16px',
+                backgroundColor: '#fff3cd',
+                borderRadius: '8px',
+                border: '1px solid #ffc107'
+              }}>
+                {(() => {
+                  const slot = timetableSlots.find(s => s.id === deletingSlotId);
+                  return slot ? (
+                    <>
+                      <div><strong>Day:</strong> {slot.day}</div>
+                      <div><strong>Period:</strong> {slot.period_number}</div>
+                      <div><strong>Class:</strong> {slot.class_name}-{slot.class_section}</div>
+                      <div><strong>Subject:</strong> {slot.subject}</div>
+                      {slot.room && <div><strong>Room:</strong> {slot.room}</div>}
+                    </>
+                  ) : null;
+                })()}
+              </div>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: 'none', padding: '16px 24px 24px 24px', gap: '12px' }}>
+          <Button
+            variant="link"
+            onClick={() => setShowDeleteDialog(false)}
+            style={{ color: '#1a73e8', textDecoration: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            style={{
+              backgroundColor: '#dc3545',
+              border: 'none',
+              fontWeight: '500',
+              padding: '10px 24px',
+              borderRadius: '8px'
+            }}
+          >
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
 
-export default TeacherTimetable; 
+export default TeacherTimetable;
